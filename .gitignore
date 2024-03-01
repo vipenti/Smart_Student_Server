@@ -5,3 +5,6 @@
 
 # text files
 *.txt
+
+# pyc files
+*.pyc
