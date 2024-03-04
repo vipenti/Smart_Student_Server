@@ -4,6 +4,8 @@ import keyboard
 import winsound
 import soundfile as sf
 import io
+import numpy as np
+import wave
 
 class AudioManager:
     def __init__(self, chunk=1024, sample_format=pyaudio.paInt16, channels=2, samplerate=44100):
@@ -57,13 +59,15 @@ class AudioManager:
 
     def save_temp(self):
         buffer = io.BytesIO()
-
-        for frame in self.frames:
-            buffer.write(frame)
-
-        buffer.seek(0)
+        
+        with wave.open(buffer, 'wb') as wf:
+            wf.setnchannels(self.channels)
+            wf.setsampwidth(self.p.get_sample_size(self.sample_format))
+            wf.setframerate(self.samplerate)
+            wf.writeframes(b''.join(self.frames))
 
         return buffer
+        
                 
     # Plays the audio file at the given file path
     def play_audio(self, audio_file_path):
@@ -75,11 +79,11 @@ class AudioManager:
             with sf.SoundFile(audio_file_path, 'r') as sound_file:
                 audio = pyaudio.PyAudio()
                 stream = audio.open(format=pyaudio.paInt16, channels=sound_file.channels, rate=sound_file.samplerate, output=True)
-                data = sound_file.read(1024,dtype='int16')
+                data = sound_file.read(self.chunk, dtype='int16')
                 
                 while len(data) > 0:
                     stream.write(data.tobytes())
-                    data = sound_file.read(102,dtype='int16')
+                    data = sound_file.read(self.chunk, dtype='int16')
 
                 stream.stop_stream()
                 stream.close()

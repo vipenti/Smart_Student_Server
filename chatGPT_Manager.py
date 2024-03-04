@@ -1,14 +1,14 @@
 import openai
 
 class ChatGPT_Manager:
-    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt = None):
+    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt = ""):
         self.API_Key = API_Key
         self.model = model
-        self.messages = []
-        openai.api_key = API_Key
-        if starting_prompt:
-            self.messages.append({"role": "system", "content": starting_prompt})
+        self.starting_prompt = ({"role": "system", "content": starting_prompt})
+        self.messages = [self.starting_prompt]
 
+        openai.api_key = API_Key
+        
     # Makes a regular request to OpenAI Chat API  
     def generate_response_history(self, message):
         self.messages.append(
@@ -19,11 +19,14 @@ class ChatGPT_Manager:
 
         
     # Makes a request to OpenAI Chat API without history
-    def generate_response(self, message):
+    def generate_response(self, message, starting_prompt = ""):
 
         no_history_msgs = []
 
-        no_history_msgs.append({"role": "system", "content": "You are a student."})
+        no_history_msgs.append(
+            {"role": "system", "content": starting_prompt}
+        )
+        
         no_history_msgs.append(
             {"role": "user", "content": message}
         )
@@ -39,3 +42,7 @@ class ChatGPT_Manager:
         )
 
         return reply.choices[0].message.content
+    
+    def clear_history(self):
+        self.messages = []
+

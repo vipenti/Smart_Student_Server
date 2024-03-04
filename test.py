@@ -3,6 +3,7 @@ import whisper
 from audioManager import AudioManager
 import warnings
 import pygame
+import numpy as np
 from openAI_TTS_Manager import OpenAI_TTS_Manager
 from chatGPT_Manager import ChatGPT_Manager
 
@@ -48,13 +49,13 @@ while True:
 
     # Save the recording to a file
     print("Saving the recording to a file.")
-    #recorder.save(default_speaker_filename)
-    buffer = recorder.save_temp()
+    recorder.save(default_speaker_filename)
 
     # Gather model time
     start_time = time.time()
 
-    result = model.transcribe(buffer)
+    print("Transcribing the audio file.")
+    result = model.transcribe(default_speaker_filename)
 
     print("API Call to GPT-3.5")
     reply = gpt_manager.generate_response_history(result["text"])
@@ -65,10 +66,10 @@ while True:
 
     print(f"Student: '{reply}'")
 
-    # tts_manager.generate_audio(reply)
+    tts_manager.generate_audio(reply)
 
-    # with open('myfile.txt', 'w', encoding='utf-8') as f:
-    #     f.write(result["text"])
+    with open('myfile.txt', 'w', encoding='utf-8') as f:
+        f.write(result["text"])
 
     print("Proceeding? (y/n)")
 
