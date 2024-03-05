@@ -3,6 +3,15 @@ import soundfile as sf
 import io
 from audioManager import AudioManager
 
+voices = [
+    "nova",
+    "alloy",
+    "echo",
+    "fable",
+    "onyx",
+    "shimmer"
+]
+
 class OpenAI_TTS_Manager:
     def __init__(self, API_Key, model='tts-1', voice='nova'):
         self.API_Key = API_Key

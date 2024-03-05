@@ -4,8 +4,9 @@ from audioManager import AudioManager
 import warnings
 import pygame
 import numpy as np
-from openAI_TTS_Manager import OpenAI_TTS_Manager
-from chatGPT_Manager import ChatGPT_Manager
+from student import Student, Personality, Intelligence
+import random
+import tempfile
 
 warnings.filterwarnings('ignore')
 
@@ -16,31 +17,27 @@ API_Key = "YOUR_API_KEY_HERE"
 # Initialize pygame's mixer
 pygame.mixer.init()
 
-starting_prompt ="""
-                Sei uno studente universitario che sta seguendo le lezioni del professore.
-                Il professore parlerà di un argomento e tu hai il compito di ascoltarlo attentamente 
-                e formulare una domanda di senso compiuto sull'argomento in questione.
-                Le domande devono essere pertinenti e non devono essere banali.
-                Comunica con il professore dando del Lei ed essere educato.
-                Se il professore chiede se hai capito, rispondi con risposte tipo: "Sì, professore" o "No, professore".
-                Le domande devono essere coincise e brevi.
-                """
-
-# Initialize the OpenAI TTS Manager
-tts_manager = OpenAI_TTS_Manager(API_Key)
-
-# Initialize the ChatGPT Manager
-gpt_manager = ChatGPT_Manager(API_Key, starting_prompt= starting_prompt)
-
 # Load the model
 print("Loading the model.")
 model = whisper.load_model("small")
 
 recorder = AudioManager()
 
+print("Input the subject of the lesson: ")
+subject = input()
+
+# Create a student with random personality and intelligence
+random_personality = random.choice(list(Personality))
+random_intelligence = random.choice(list(Intelligence))
+print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\n")
+
+student = Student(random_personality, random_intelligence, subject, API_Key)
+
 default_speaker_filename = "speaker_audio.wav"
 
 while True:
+    
+
 
     # Record audio
     print("Start recording: ")
@@ -49,16 +46,22 @@ while True:
 
     # Save the recording to a file
     print("Saving the recording to a file.")
-    recorder.save(default_speaker_filename)
+    buffer = recorder.save_temp()
+
+    with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
+        buffer.seek(0)
+        temp.write(buffer.read())
+        temp.seek(0)
+        temp_file = temp.name
 
     # Gather model time
     start_time = time.time()
 
     print("Transcribing the audio file.")
-    result = model.transcribe(default_speaker_filename)
+    result = model.transcribe(temp_file)
 
     print("API Call to GPT-3.5")
-    reply = gpt_manager.generate_response_history(result["text"])
+    reply = student.generate_question(result["text"])
     #reply = gpt_manager.generate_response("TEST")
     
     end_time = time.time()
@@ -66,7 +69,7 @@ while True:
 
     print(f"Student: '{reply}'")
 
-    tts_manager.generate_audio(reply)
+    student.generate_audio(reply)
 
     with open('myfile.txt', 'w', encoding='utf-8') as f:
         f.write(result["text"])
@@ -75,10 +78,10 @@ while True:
 
     choice = input()
     
-    if choice == "n":
-        break
-    else:
+    if choice == "y":
         continue
+    else:
+        break
 
 
 # Quit the mixer
