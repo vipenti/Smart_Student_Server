@@ -5,6 +5,7 @@ import warnings
 import pygame
 import numpy as np
 from student import Student, Personality, Intelligence
+from openAI_TTS_Manager import OPENAI_VOICES_ITA
 import random
 import tempfile
 
@@ -24,21 +25,20 @@ model = whisper.load_model("small")
 recorder = AudioManager()
 
 print("Input the subject of the lesson: ")
-subject = input()
+#subject = input()
+subject = "Automi a stati finiti"
 
 # Create a student with random personality and intelligence
 random_personality = random.choice(list(Personality))
 random_intelligence = random.choice(list(Intelligence))
-print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\n")
+voice = random.choice(OPENAI_VOICES_ITA)
+print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\nVoice: {voice}")
 
-student = Student(random_personality, random_intelligence, subject, API_Key)
+student = Student(random_personality, random_intelligence, subject, API_Key, voice)
 
 default_speaker_filename = "speaker_audio.wav"
 
 while True:
-    
-
-
     # Record audio
     print("Start recording: ")
     recorder.start()
@@ -67,12 +67,13 @@ while True:
     end_time = time.time()
     print("Execution time: ", end_time - start_time, "seconds\n")
 
-    print(f"Student: '{reply}'")
 
-    student.generate_audio(reply)
+    if reply:
+        print(f"Student: '{reply}'")
+        student.generate_audio(reply)
 
-    with open('myfile.txt', 'w', encoding='utf-8') as f:
-        f.write(result["text"])
+        with open('myfile.txt', 'w', encoding='utf-8') as f:
+            f.write(result["text"])
 
     print("Proceeding? (y/n)")
 

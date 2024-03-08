@@ -20,6 +20,8 @@ class ChatGPT_Manager:
         
     # Makes a request to OpenAI Chat API without history
     def generate_response(self, message, starting_prompt = ""):
+        if starting_prompt == "":
+            starting_prompt = self.starting_prompt
 
         no_history_msgs = []
 
