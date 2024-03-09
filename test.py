@@ -2,10 +2,9 @@ import time
 import whisper
 from audioManager import AudioManager
 import warnings
-import pygame
 import numpy as np
 from student import Student, Personality, Intelligence
-from openAI_TTS_Manager import OPENAI_VOICES_ITA
+from openAI_TTS_Manager import OpenAI_TTS_Manager
 import random
 import tempfile
 
@@ -15,39 +14,35 @@ warnings.filterwarnings('ignore')
 #openai.api_key = "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" 
 API_Key = "YOUR_API_KEY_HERE"
 
-# Initialize pygame's mixer
-pygame.mixer.init()
-
 # Load the model
 print("Loading the model.")
 model = whisper.load_model("small")
 
-recorder = AudioManager()
+recorder = AudioManager() # AudioManager object to record the audio
 
+# Ask the user for the subject of the lesson
 print("Input the subject of the lesson: ")
-#subject = input()
-subject = "Automi a stati finiti"
+subject = input()
 
-# Create a student with random personality and intelligence
+# Create a student with random personality, intelligence and voice
 random_personality = random.choice(list(Personality))
 random_intelligence = random.choice(list(Intelligence))
-voice = random.choice(OPENAI_VOICES_ITA)
+voice = random.choice(OpenAI_TTS_Manager.OPENAI_VOICES_ITA)
 print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\nVoice: {voice}")
 
-student = Student(random_personality, random_intelligence, subject, API_Key, voice)
+student = Student(Personality.CONFIDENT, Intelligence.HIGH, subject, API_Key, voice)
 
-default_speaker_filename = "speaker_audio.wav"
 
 while True:
     # Record audio
-    print("Start recording: ")
+    print("[Recording] Started recording: ")
     recorder.start()
-    print("Recording finished.")
 
-    # Save the recording to a file
-    print("Saving the recording to a file.")
+    # Save the recording to a byte buffer
+    print("[Saving] Saving the recording to a file.")
     buffer = recorder.save_temp()
 
+    # Save the recording to a temporary file
     with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
         buffer.seek(0)
         temp.write(buffer.read())
@@ -57,21 +52,24 @@ while True:
     # Gather model time
     start_time = time.time()
 
-    print("Transcribing the audio file.")
+    print("[Speech-to-Text] Transcribing the audio file.")
     result = model.transcribe(temp_file)
 
-    print("API Call to GPT-3.5")
+    print("[Text Generation] API Call to OpenAI Chat")
     reply = student.generate_question(result["text"])
-    #reply = gpt_manager.generate_response("TEST")
     
+    # DEBUG ONLY - Print calls and models time
     end_time = time.time()
     print("Execution time: ", end_time - start_time, "seconds\n")
 
-
+    # If the reply is valid then play the audio
     if reply:
         print(f"Student: '{reply}'")
+
+        # Generate audio from the reply
         student.generate_audio(reply)
 
+        # DEBUG ONLY - Save the reply to a file
         with open('myfile.txt', 'w', encoding='utf-8') as f:
             f.write(result["text"])
 
@@ -83,7 +81,3 @@ while True:
         continue
     else:
         break
-
-
-# Quit the mixer
-pygame.mixer.quit()

@@ -29,18 +29,18 @@ class Student:
                 """
     not_understood = "Non hai capito la spiegazione, chiedi qualcosa tipo 'Prof potrebbe ripete?' oppure 'Non ho capito l'ultima parte' o messaggi simili"
 
-    def __init__(self, personality, intelligence, subject, API_Key, voice):
+    def __init__(self, personality, intelligence, subject, API_Key, voice, completions_model = "gpt-3.5-turbo", voice_model = "tts-1"):
         self.personality = personality
         self.intelligence = intelligence
         self.subject = subject
 
         self.starting_prompt = Student.starting_prompt.format(subject = self.subject, difficulty = self.intelligence.value)
 
-        self.gpt_manager = ChatGPT_Manager(API_Key, starting_prompt= self.starting_prompt)
-        self.tts_manager = OpenAI_TTS_Manager(API_Key, voice = voice)
+        self.gpt_manager = ChatGPT_Manager(API_Key, model = completions_model, starting_prompt= self.starting_prompt)
+        self.tts_manager = OpenAI_TTS_Manager(API_Key, model = voice_model,voice = voice)
     
     def generate_question(self, message):
-        #TODO MAKE THIS MORE DYNAMIC BY RANDOMISING BASED ON Intelligence WETHER TO ASK OR NOT
+        #TODO make chances less and less likely as the student gets more and more questions wrong
         personality_probability = self.personality.value / max(i.value for i in Personality)
         intelligence_probability = self.intelligence.value / max(i.value for i in Intelligence)
         

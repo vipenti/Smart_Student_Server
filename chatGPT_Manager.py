@@ -1,13 +1,20 @@
 import openai
 
 class ChatGPT_Manager:
-    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt = ""):
-        self.API_Key = API_Key
-        self.model = model
-        self.starting_prompt = ({"role": "system", "content": starting_prompt})
-        self.messages = [self.starting_prompt]
 
-        openai.api_key = API_Key
+    # List of available models from OpenAI as of 8 March 2024
+    MODELS = [
+        "gpt-3.5-turbo",
+        "gpt-4",
+        "gpt-4-turbo-preview",
+    ]
+
+    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt = ""):
+        self.model = model  # OpenAI text completions model
+        self.starting_prompt = ({"role": "system", "content": starting_prompt}) # System prompt to set up the conversation
+        self.messages = [self.starting_prompt]  # List of messages exchanged in the conversation initialised with the starting prompt
+
+        openai.api_key = API_Key    # Set the API Key for OpenAI
         
     # Makes a regular request to OpenAI Chat API  
     def generate_response_history(self, message):
@@ -25,10 +32,12 @@ class ChatGPT_Manager:
 
         no_history_msgs = []
 
+        # Add the starting prompt to the list of messages to remind the AI of the context
         no_history_msgs.append(
             {"role": "system", "content": starting_prompt}
         )
         
+        # Add the user's message to the list of messages
         no_history_msgs.append(
             {"role": "user", "content": message}
         )
@@ -42,9 +51,12 @@ class ChatGPT_Manager:
 
             messages = messages
         )
-
+    
         return reply.choices[0].message.content
     
+    # Clears the history of the conversation
     def clear_history(self):
         self.messages = []
+        self.messages.append(self.starting_prompt)
+        return
 
