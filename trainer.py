@@ -25,3 +25,5 @@ subject = [
 ]
 
 student = Student(Personality.CONFIDENT, Intelligence.HIGH, random.choice(subject), API_Key)
+
+git filter-branch --tree-filter "find . -type f -name '*.py' -exec sed -i 's/API_Key = \".*\"/API_Key = \"YOUR_API_KEY_HERE\"/g' {} \;" HEAD
