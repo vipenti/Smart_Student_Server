@@ -10,7 +10,8 @@ import webrtcvad
 import os
 
 class AudioManager:
-    SILENCE_THRESHOLD = 30 # ms of silence to end recording; must 10/20/30ms for VAD
+    # Frame duration in ms
+    MAX_SILENT_FRAMES = 30 # ms of silence to end recording; must 10/20/30ms for VAD
     VAD_ALLOWED_SAMPLERATES = [8000, 16000, 32000, 48000] # Allowed sample rates for VAD
     DEFAULT_SAVING_FOLDER = "recordings"                  # Default folder to save the recordings
 
@@ -24,12 +25,15 @@ class AudioManager:
         self.p = None                       # PyAudio object
         self.stream = None                  # PyAudio stream
         self.vad = webrtcvad.Vad(2)         # Voice Activity Detection object
-        self.frames_per_treshold = int(sample_rate / 1000 * self.SILENCE_THRESHOLD) # Number of frames per treshold
+        self.samples_per_frame = int(sample_rate / 1000 * self.MAX_SILENT_FRAMES) # Number of samples per frame duration
         self.max_silent_seconds = max_silent_seconds    # Maximum number of seconds of silence to end recording
         self.max_sample_length = max_sample_length      # Maximum number of seconds of recording allowed
 
+    def time_to_frames(self, time):
+        return int(time * 1000 / self.MAX_SILENT_FRAMES)
+
     # Starts live recording
-    def start(self, voice_activity_detection= True, interrupt_key = 'q'):
+    def start(self, voice_activity_detection= False, interrupt_key = 'q'):
         try:
             if self.channels > 1 or self.sample_format != pyaudio.paInt16 or self.sample_rate not in self.VAD_ALLOWED_SAMPLERATES:
                 raise Exception("Invalid configuration for Voice Activation Detection")
@@ -37,12 +41,15 @@ class AudioManager:
             print(e)
             voice_activity_detection = False # Disable VAD if the configuration is invalid
 
+
         self.recording = True
         self.frames = []    # Reset the frames list
         
-        # detectable time subdivisions for which the VAD can detect silence
-        time_subdivisions = int(self.max_silent_seconds * 1000 / self.SILENCE_THRESHOLD)
-        silences = 0
+        # silence time divided in terms of frames
+        silent_frames = int(self.max_silent_seconds * 1000 / self.MAX_SILENT_FRAMES)
+        max_frames = int(self.max_sample_length * 1000 / self.MAX_SILENT_FRAMES)
+
+        silences = speaking_frames = 0
 
         # Signal to notify the start of recording
         winsound.Beep(1000, 200)
@@ -58,7 +65,7 @@ class AudioManager:
         # Start recording
         while self.recording:
             # Read the audio frames and append them to the list
-            detectable_frames = self.stream.read(self.frames_per_treshold)
+            detectable_frames = self.stream.read(self.samples_per_frame)
             self.frames.append(detectable_frames)
 
             # Voice Activity Detection
@@ -67,9 +74,19 @@ class AudioManager:
                     silences += 1
 
                     # If the number of silences is greater than the time subdivisions (it reaches the seconds of silence) then stop the recording
-                    if silences >= time_subdivisions:
+                    if silences >= silent_frames:
                         print('[Recording Stopped] Reached Silence Threshold')
                         self.stop()
+                    
+                    if speaking_frames >= max_frames:
+                        print('[Recording Stopped] Reached Maximum Recording Length')
+                        self.stop()
+                
+                else:
+                    silences = 0
+                    speaking_frames += 1
+                    
+                    silent_frames -= int(silent_frames / 5)
                     
             # Manual termination of the recording by pressing specified key
             if keyboard.is_pressed(interrupt_key):

@@ -25,18 +25,19 @@ print("Input the subject of the lesson: ")
 subject = input()
 
 # Create a student with random personality, intelligence and voice
-random_personality = random.choice(list(Personality))
-random_intelligence = random.choice(list(Intelligence))
+# random_personality = random.choice(list(Personality))
+# random_intelligence = random.choice(list(Intelligence))
 voice = random.choice(OpenAI_TTS_Manager.OPENAI_VOICES_ITA)
-print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\nVoice: {voice}")
+# print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\nVoice: {voice}")
 
 student = Student(Personality.CONFIDENT, Intelligence.HIGH, subject, API_Key, voice)
 
+f = open
 
 while True:
     # Record audio
     print("[Recording] Started recording: ")
-    recorder.start()
+    recorder.start(voice_activity_detection= True)
 
     # Save the recording to a byte buffer
     print("[Saving] Saving the recording to a file.")
@@ -56,7 +57,7 @@ while True:
     result = model.transcribe(temp_file)
 
     print("[Text Generation] API Call to OpenAI Chat")
-    reply = student.generate_question(result["text"])
+    reply = student.generate_response(result["text"])
     
     # DEBUG ONLY - Print calls and models time
     end_time = time.time()
@@ -70,8 +71,8 @@ while True:
         student.generate_audio(reply)
 
         # DEBUG ONLY - Save the reply to a file
-        with open('myfile.txt', 'w', encoding='utf-8') as f:
-            f.write(result["text"])
+        # with open('myfile.txt', 'w', encoding='utf-8') as f:
+        #     f.write(result["text"])
 
     print("Proceeding? (y/n)")
 
