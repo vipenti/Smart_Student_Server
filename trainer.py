@@ -1,7 +1,12 @@
 from student import Student, Personality, Intelligence
 import random
+import json
 
-API_Key = "YOUR_API_KEY_HERE"
+with open('configs/API_key.json') as config_file:
+    data = json.load(config_file)
+
+# OpenAI API key
+API_Key = data['API_KEY']
 
 subject = [
     "Matematica",
@@ -25,5 +30,3 @@ subject = [
 ]
 
 student = Student(Personality.CONFIDENT, Intelligence.HIGH, random.choice(subject), API_Key)
-
-git filter-branch --tree-filter "find . -type f -name '*.py' -exec sed -i 's/API_Key = \".*\"/API_Key = \"YOUR_API_KEY_HERE\"/g' {} \;" HEAD
