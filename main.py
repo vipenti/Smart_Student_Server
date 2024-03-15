@@ -11,7 +11,6 @@ import tempfile
 warnings.filterwarnings('ignore')
 
 #OpenAI API key
-#openai.api_key = "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" 
 API_Key = "YOUR_API_KEY_HERE"
 
 # Load the model

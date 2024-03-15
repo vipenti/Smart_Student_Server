@@ -9,3 +9,7 @@
 # pyc files
 *.pyc
 /__pycache__/*
+
+#configuration json file
+config/API_key.json
+configs/config.json
