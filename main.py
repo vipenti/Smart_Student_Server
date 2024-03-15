@@ -2,7 +2,7 @@ import time
 import whisper
 from audioManager import AudioManager
 import warnings
-import numpy as np
+import json
 from student import Student, Personality, Intelligence
 from openAI_TTS_Manager import OpenAI_TTS_Manager
 import random
@@ -10,8 +10,11 @@ import tempfile
 
 warnings.filterwarnings('ignore')
 
-#OpenAI API key
-API_Key = "YOUR_API_KEY_HERE"
+with open('configs/API_key.json') as config_file:
+    data = json.load(config_file)
+
+# OpenAI API key
+API_Key = data['API_KEY']
 
 # Load the model
 print("Loading the model.")

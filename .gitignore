@@ -11,5 +11,4 @@
 /__pycache__/*
 
 #configuration json file
-config/API_key.json
-configs/config.json
+/configs/*
