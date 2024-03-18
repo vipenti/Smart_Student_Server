@@ -10,6 +10,9 @@
 *.pyc
 /__pycache__/*
 
-#configuration json file
+# configuration json file
 /configs/*
 *.json
+
+# csv files
+*.csv

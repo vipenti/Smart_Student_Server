@@ -1,5 +1,5 @@
 from enum import Enum
-from openAI_TTS_Manager import OPENAI_VOICES
+from openAI_TTS_Manager import OpenAI_TTS_Manager
 from speaking_interface import Speaker
 import random 
 
@@ -29,7 +29,7 @@ class Student(Speaker):
                 """
     not_understood = "Non hai capito la spiegazione, chiedi qualcosa tipo 'Prof potrebbe ripete?' oppure 'Non ho capito l'ultima parte' o messaggi simili"
 
-    def __init__(self, personality, intelligence, subject, API_Key, voice = OPENAI_VOICES[0], completions_model = "gpt-3.5-turbo", voice_model = "tts-1"):
+    def __init__(self, personality, intelligence, subject, API_Key, voice = OpenAI_TTS_Manager.OPENAI_VOICES[0], completions_model = "gpt-3.5-turbo", voice_model = "tts-1"):
         self.personality = personality
         self.intelligence = intelligence
         self.personality_probability = self.personality.value / max(i.value for i in Personality)

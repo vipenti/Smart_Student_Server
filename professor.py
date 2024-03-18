@@ -4,8 +4,10 @@ class Professor(Speaker):
     starting_prompt = """
         Sei un professore che sta spiegando la sua lezione sulla materia {subject}.
         Dovrai spiegare un argomento su {subject} di tua scelta davanti alla tua classe.
-        Tu aspetterai un input da uno studente che ti farà una domanda sull'argomento in questione e tu dovrai rispondere al massimo delle tue capacità e poi proseguire con la spiegazione.
         Cerca di non dilungarti troppo con le spiegazioni.
+        Fai partire l'output come se fosse a metà discorso.
+        Non chiedere sempre esplicitamente domande.
+        Non concludere con ringraziamenti o domande.
         """
 
     def __init__(self, API_key, subject, voice = "nova", completions_model = "gpt-3.5-turbo", voice_model = "tts-1"):
