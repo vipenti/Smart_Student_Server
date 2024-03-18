@@ -1,4 +1,4 @@
-from chatGPT_Manager import ChatGPT_Manager
+from modules.chatGPT_Manager import ChatGPT_Manager
 from professor import Professor
 import random
 import json

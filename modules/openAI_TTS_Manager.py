@@ -1,7 +1,7 @@
 import requests
 import soundfile as sf
 import io
-from audioManager import AudioManager  
+from modules.audioManager import AudioManager  
 
 class OpenAI_TTS_Manager:
     # Voice models available from OpenAI as of 8 March 2024

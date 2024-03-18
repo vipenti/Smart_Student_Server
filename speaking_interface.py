@@ -1,5 +1,5 @@
-from chatGPT_Manager import ChatGPT_Manager
-from openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.chatGPT_Manager import ChatGPT_Manager
+from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 
 # TODO Create bridge pattern to decouple completions model and voice model
 

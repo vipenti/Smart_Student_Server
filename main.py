@@ -1,10 +1,10 @@
 import time
 import whisper
-from audioManager import AudioManager
+from modules.audioManager import AudioManager
 import warnings
 import json
 from student import Student, Personality, Intelligence
-from openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 import random
 import tempfile
 

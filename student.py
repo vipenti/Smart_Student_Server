@@ -1,5 +1,5 @@
 from enum import Enum
-from openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from speaking_interface import Speaker
 import random 
 
