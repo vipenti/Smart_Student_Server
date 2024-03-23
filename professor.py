@@ -5,7 +5,8 @@ class Professor(Speaker):
         Sei un professore che sta spiegando la sua lezione sulla materia {subject}.
         Dovrai spiegare un argomento su {subject} di tua scelta davanti alla tua classe.
         Cerca di non dilungarti troppo con le spiegazioni.
-        Fai partire l'output come se fosse a metà discorso.
+        Il discorso deve essere fluido, NON deve partire con "oggi" o "quindi".
+        NON devi iniziare con un saluto.
         Non chiedere sempre esplicitamente domande.
         Non concludere con ringraziamenti o domande.
         """
