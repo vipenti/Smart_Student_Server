@@ -1,5 +1,6 @@
 import openai
 
+
 class ChatGPT_Manager:
 
     # List of available models from OpenAI as of 8 March 2024
@@ -9,24 +10,28 @@ class ChatGPT_Manager:
         "gpt-4-turbo-preview",
     ]
 
-    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt = ""):
+    def __init__(self, API_Key, model="gpt-3.5-turbo", starting_prompt=""):
         self.model = model  # OpenAI text completions model
-        self.starting_prompt = ({"role": "system", "content": starting_prompt}) # System prompt to set up the conversation
-        self.messages = [self.starting_prompt]  # List of messages exchanged in the conversation initialised with the starting prompt
+
+        # System prompt to set up the conversation
+        self.starting_prompt = ({"role": "system", "content": starting_prompt})
+
+        # List of messages exchanged in the conversation initialised with the starting prompt
+        self.messages = [self.starting_prompt]
 
         openai.api_key = API_Key    # Set the API Key for OpenAI
-        
-    # Makes a regular request to OpenAI Chat API  
+
+    # Makes a regular request to OpenAI Chat API
     def generate_response_history(self, message):
         self.messages.append(
-                {"role": "user", "content": message}
-            )
-        
+            {"role": "user", "content": message}
+        )
+
         return self.api_call(self.messages)
 
-        
     # Makes a request to OpenAI Chat API without history
-    def generate_response(self, message, starting_prompt = ""):
+
+    def generate_response(self, message, starting_prompt=""):
         if starting_prompt == "":
             starting_prompt = self.starting_prompt
 
@@ -36,7 +41,7 @@ class ChatGPT_Manager:
         no_history_msgs.append(
             {"role": "system", "content": starting_prompt}
         )
-        
+
         # Add the user's message to the list of messages
         no_history_msgs.append(
             {"role": "user", "content": message}
@@ -47,16 +52,14 @@ class ChatGPT_Manager:
     # Makes the actual API call to OpenAI Chat API
     def api_call(self, messages):
         reply = openai.chat.completions.create(
-            model = self.model,
+            model=self.model,
 
-            messages = messages
+            messages=messages
         )
-    
+
         return reply.choices[0].message.content
-    
+
     # Clears the history of the conversation
     def clear_history(self):
         self.messages = []
         self.messages.append(self.starting_prompt)
-        return
-
