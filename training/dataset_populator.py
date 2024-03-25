@@ -16,38 +16,32 @@ with open('configs/API_key.json') as config_file:
 # OpenAI API key
 API_Key = data['API_KEY']
 
-subject = [
-    "Matematica",
-    "Fisica",
-    "Chimica",
-    "Biologia",
-    "Informatica",
-    "Storia",
-    "Filosofia",
-    "Letteratura",
-    "Arte",
-    "Economia",
-    "Geografia",
-    "Inglese",
-    "Italiano",
-    "Scienze motorie",
-    "Educazione civica",
-    "Musica"
-]
 
-guy_starting_prompt = """Stai raccontando ai tuoi studenti un aneddoto a caso OPPURE un fatto interessante che non è inerente alla lezione. Non raccontare aneddoti o storie troppo lunghe. Inizia il discorso in maniera organica, come se fossi a metà discorso. Non terminare con frasi che indicano un ritorno al discorso."""
+with open('configs/subjects.json') as subjects_file:
+    subjects = json.load(subjects_file)
+
+guy_starting_prompt = """Stai raccontando ai tuoi studenti un aneddoto a caso OPPURE una storiella che non è inerente alla lezione. 
+Non raccontare aneddoti o storie troppo lunghe. 
+Non devi iniziare annunciando il fatto che stai per raccontare.
+Non devi iniziare con "casuale" o "casualmente".
+Non devi iniziare con un saluto.
+Non devi introdurre il discorso.
+Non terminare con frasi che indicano un ritorno al discorso."""
 
 professor_response_list = []
 guy_response_list = []
 
 saving_percent = max_iterations // 10
+saving_percent = 1 if saving_percent <= 1 else saving_percent
 
 for i in range(max_iterations):
-    print(f"\rRunning #{i+1} iteration", end="")
-    random_subject = random.choice(subject)
+    # Randomly select a subject, random key, random element of array
+    random_subject = random.choice(subjects[random.choice(list(subjects.keys()))])
 
-    professor = Professor(API_Key, random_subject)
-    random_guy = ChatGPT_Manager(API_Key, starting_prompt= guy_starting_prompt)
+    print(f"\rRunning #{i+1} iteration <Subject: {random_subject}>", end="")
+
+    professor = Professor(API_Key, random_subject, completions_model=ChatGPT_Manager.MODELS[1])
+    random_guy = ChatGPT_Manager(API_Key, starting_prompt= guy_starting_prompt, model=ChatGPT_Manager.MODELS[1])
 
     # Generate responses from both
     guy_response = random_guy.generate_response_history("genera").replace("\"", "'")
@@ -63,8 +57,8 @@ for i in range(max_iterations):
     professor_response_list.append(professor_response)
     guy_response_list.append(guy_response)
 
-    if (i+1) % saving_percent:
-        print(f"Saving {i+1}th iteration")
+    if (i+1) % saving_percent == 0 or i+1 == max_iterations:
+        print(f" [Saved]")
 
         # Turn them into dataframes 
         prof_df = pd.DataFrame({
