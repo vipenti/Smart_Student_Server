@@ -19,3 +19,4 @@ shuffled_df.to_csv("data/mixed.csv", index=False)
 # [NER] Named Entities Recognition and Disambiguation
 # Topic Modelling
 # Acoustic features?
+# TODO: implement own model
