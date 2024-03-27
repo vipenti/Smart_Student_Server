@@ -1,7 +1,7 @@
 from modules.chatGPT_Manager import ChatGPT_Manager
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 
-# TODO Create bridge pattern to decouple completions model and voice model
+# TODO Create template method pattern design to decouple completions model and voice model
 
 class Speaker:
     def __init__(self, API_key, voice, completions_model, voice_model, starting_prompt):

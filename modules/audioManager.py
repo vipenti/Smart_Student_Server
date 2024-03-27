@@ -4,7 +4,6 @@ import keyboard
 import winsound
 import soundfile as sf
 import io
-import numpy as np
 import wave
 import webrtcvad
 import os
@@ -12,31 +11,31 @@ import os
 
 class AudioManager:
     # Frame duration in ms
-    MAX_SILENT_FRAMES = 30  # ms of silence to end recording; must 10/20/30ms for VAD
+    SILENT_FRAME_SIZE = 30  # ms of silence to end recording; must 10/20/30ms for VAD
     # Allowed sample rates for VAD
     VAD_ALLOWED_SAMPLERATES = [8000, 16000, 32000, 48000]
     # Default folder to save the recordings
     DEFAULT_SAVING_FOLDER = "recordings"
 
-    def __init__(self, chunk=1024, sample_format=pyaudio.paInt16, channels=1, sample_rate=32000, max_silent_seconds=5, max_sample_length=30):
+    def __init__(self, chunk=1024, sample_format=pyaudio.paInt16, channels=1, sample_rate=32000, max_silent_seconds=5, max_recording_length=30):
         self.recording = False  # Flag to indicate if the recording is ongoing
         self.frames = []        # List to store the audio frames
         self.chunk = chunk      # Number of frames per buffer
         self.sample_format = sample_format  # Format of the audio samples
-        self.channels = channels            # Number of audio channels
+        self.channels = channels            # Number of audio channels only 1 channel is supported for VAD
         self.sample_rate = sample_rate      # Number of samples per second
         self.p = None                       # PyAudio object
         self.stream = None                  # PyAudio stream
         self.vad = webrtcvad.Vad(2)         # Voice Activity Detection object
         self.samples_per_frame = self.count_samples_per_frame(sample_rate)  # Number of samples per frame duration  
         self.max_silent_seconds = max_silent_seconds                        # Maximum number of seconds of silence to end recording
-        self.max_sample_length = max_sample_length                          # Maximum number of seconds of recording allowed
+        self.max_recording_length = max_recording_length                          # Maximum number of seconds of recording allowed
 
     def count_samples_per_frame(self, sample_rate):
-        return int(sample_rate / 1000 * self.MAX_SILENT_FRAMES)
+        return int(sample_rate / 1000 * self.SILENT_FRAME_SIZE)
 
     def time_as_frames(self, time):
-        return int(time * 1000 / self.MAX_SILENT_FRAMES)
+        return int(time * 1000 / self.SILENT_FRAME_SIZE)
 
     # Starts live recording
     def start(self, voice_activity_detection=False, interrupt_key='q'):
@@ -53,7 +52,7 @@ class AudioManager:
 
         # silence time divided in terms of frames
         silent_frames = self.time_as_frames(self.max_silent_seconds)
-        max_frames = self.time_as_frames(self.max_sample_length)
+        max_frames = self.time_as_frames(self.max_recording_length)
         
         print(f'Silent Frames: {silent_frames}')
 
@@ -81,7 +80,8 @@ class AudioManager:
                 if not self.vad.is_speech(detectable_frames, self.sample_rate):
                     silences += 1
 
-                    print(f'Silence: {silences}frames')
+                    # DEBUG ONLY
+                    # print(f'Silence: {silences}frames')
 
                     # If the number of silences is greater than the time subdivisions (it reaches the seconds of silence) then stop the recording
                     if silences >= silent_frames:
@@ -98,7 +98,9 @@ class AudioManager:
 
                     if speaking_frames >= max_frames:
                         silent_frames -= int(silent_frames / 10)
-                        print(f'Silent Frames: {silent_frames}')
+
+                        # DEBUG ONLY
+                        # print(f'Silent Frames: {silent_frames}')
 
             # Manual termination of the recording by pressing specified key
             if keyboard.is_pressed(interrupt_key):

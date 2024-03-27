@@ -35,8 +35,6 @@ voice = random.choice(OpenAI_TTS_Manager.OPENAI_VOICES_ITA)
 student = Student(Personality.CONFIDENT, Intelligence.HIGH,
                   subject, API_Key, voice)
 
-f = open
-
 while True:
     # Record audio
     print("[Recording] Started recording: ")

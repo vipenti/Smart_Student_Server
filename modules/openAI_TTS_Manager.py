@@ -1,5 +1,4 @@
 import requests
-import soundfile as sf
 import io
 from modules.audioManager import AudioManager
 
