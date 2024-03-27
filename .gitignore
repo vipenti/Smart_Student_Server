@@ -16,3 +16,6 @@
 
 # csv files
 *.csv
+
+# test files
+test_audio.py

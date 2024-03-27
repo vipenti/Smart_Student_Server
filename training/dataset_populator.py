@@ -5,8 +5,11 @@ import json
 import argparse
 import pandas as pd
 
-parser = argparse.ArgumentParser(description='Populate the dataset with random conversations of a professor and a random guy')
-parser.add_argument('max_iterations', type=int, help='The maximum number of iterations to run the script for')
+parser = argparse.ArgumentParser(
+    description='Populate the dataset with random conversations of a professor and a random guy')
+
+parser.add_argument('max_iterations', type=int,
+                    help='The maximum number of iterations to run the script for')
 
 max_iterations = parser.parse_args().max_iterations
 
@@ -36,16 +39,23 @@ saving_percent = 1 if saving_percent <= 1 else saving_percent
 
 for i in range(max_iterations):
     # Randomly select a subject, random key, random element of array
-    random_subject = random.choice(subjects[random.choice(list(subjects.keys()))])
+    random_subject = random.choice(
+        subjects[random.choice(list(subjects.keys()))])
 
     print(f"\rRunning #{i+1} iteration <Subject: {random_subject}>", end="")
 
-    professor = Professor(API_Key, random_subject, completions_model=ChatGPT_Manager.MODELS[1])
-    random_guy = ChatGPT_Manager(API_Key, starting_prompt= guy_starting_prompt, model=ChatGPT_Manager.MODELS[1])
+    professor = Professor(API_Key, random_subject,
+                          completions_model=ChatGPT_Manager.MODELS[1])
+    
+    random_guy = ChatGPT_Manager(
+        API_Key, starting_prompt=guy_starting_prompt, model=ChatGPT_Manager.MODELS[1])
 
     # Generate responses from both
-    guy_response = random_guy.generate_response_history("genera").replace("\"", "'")
-    professor_response = professor.generate_response("partiamo").replace("\"", "'")
+    guy_response = random_guy.generate_response_history(
+        "genera").replace("\"", "'")
+    
+    professor_response = professor.generate_response(
+        "partiamo").replace("\"", "'")
 
     guy_response = guy_response.replace("\n", " ")
     professor_response = professor_response.replace("\n", " ")
@@ -60,7 +70,7 @@ for i in range(max_iterations):
     if (i+1) % saving_percent == 0 or i+1 == max_iterations:
         print(f" [Saved]")
 
-        # Turn them into dataframes 
+        # Turn them into dataframes
         prof_df = pd.DataFrame({
             "text": professor_response_list,
             "speaker": "'professor'"
@@ -71,9 +81,12 @@ for i in range(max_iterations):
             "speaker": "'random_guy'"
         })
 
-        # Convert to csv or parquet    
-        prof_df.to_csv("data/professor.csv", mode='a', header=False, index=False)
-        guy_df.to_csv("data/random_guy.csv", mode='a', header=False, index=False)
+        # Convert to csv or parquet
+        prof_df.to_csv("data/professor.csv", mode='a',
+                       header=False, index=False)
+        
+        guy_df.to_csv("data/random_guy.csv", mode='a',
+                      header=False, index=False)
 
         professor_response_list = []
         guy_response_list = []
