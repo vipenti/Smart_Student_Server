@@ -28,13 +28,14 @@ class AudioManager:
         self.p = None                       # PyAudio object
         self.stream = None                  # PyAudio stream
         self.vad = webrtcvad.Vad(2)         # Voice Activity Detection object
-        self.samples_per_frame = int(
-            sample_rate / 1000 * self.MAX_SILENT_FRAMES) # Number of samples per frame duration
-        
-        self.max_silent_seconds = max_silent_seconds     # Maximum number of seconds of silence to end recording
-        self.max_sample_length = max_sample_length       # Maximum number of seconds of recording allowed
+        self.samples_per_frame = self.count_samples_per_frame(sample_rate)  # Number of samples per frame duration  
+        self.max_silent_seconds = max_silent_seconds                        # Maximum number of seconds of silence to end recording
+        self.max_sample_length = max_sample_length                          # Maximum number of seconds of recording allowed
 
-    def time_to_frames(self, time):
+    def count_samples_per_frame(self, sample_rate):
+        return int(sample_rate / 1000 * self.MAX_SILENT_FRAMES)
+
+    def time_as_frames(self, time):
         return int(time * 1000 / self.MAX_SILENT_FRAMES)
 
     # Starts live recording
@@ -51,10 +52,10 @@ class AudioManager:
         self.frames = []    # Reset the frames list
 
         # silence time divided in terms of frames
-        silent_frames = int(self.max_silent_seconds *
-                            1000 / self.MAX_SILENT_FRAMES)
-        max_frames = int(self.max_sample_length *
-                         1000 / self.MAX_SILENT_FRAMES)
+        silent_frames = self.time_as_frames(self.max_silent_seconds)
+        max_frames = self.time_as_frames(self.max_sample_length)
+        
+        print(f'Silent Frames: {silent_frames}')
 
         silences = speaking_frames = 0
 
@@ -80,21 +81,24 @@ class AudioManager:
                 if not self.vad.is_speech(detectable_frames, self.sample_rate):
                     silences += 1
 
+                    print(f'Silence: {silences}frames')
+
                     # If the number of silences is greater than the time subdivisions (it reaches the seconds of silence) then stop the recording
                     if silences >= silent_frames:
                         print('[Recording Stopped] Reached Silence Threshold')
                         self.stop()
 
                     if speaking_frames >= max_frames:
-                        print(
-                            '[Recording Stopped] Reached Maximum Recording Length')
+                        print('[Recording Stopped] Reached Maximum Recording Length')
                         self.stop()
 
                 else:
                     silences = 0
                     speaking_frames += 1
 
-                    silent_frames -= int(silent_frames / 5)
+                    if speaking_frames >= max_frames:
+                        silent_frames -= int(silent_frames / 10)
+                        print(f'Silent Frames: {silent_frames}')
 
             # Manual termination of the recording by pressing specified key
             if keyboard.is_pressed(interrupt_key):

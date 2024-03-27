@@ -52,15 +52,18 @@ class Student(Speaker):
 
         super().__init__(API_Key, voice, completions_model, voice_model, self.starting_prompt)
 
-    def generate_response(self, message):
+    def generate_response(self, message, check_correlation=False):
         if message is None:
             raise ValueError("Message cannot be None")
 
         # Check if the student should ask a question
-        is_related = self.gpt_manager.generate_response(
-            message, self.UNRELATED_QUESTION.format(subject=self.subject))
+        if check_correlation:
+            is_related = self.gpt_manager.generate_response(
+                message, self.UNRELATED_QUESTION.format(subject=self.subject))
+            
+            print("Is related: " + is_related)
 
-        if is_related.lower() == "true":
+        if not check_correlation or is_related.lower() == "true":
             if random.random() <= self.personality_probability or True:
                 # Reset the personality probability if the student asked a question
                 if self.personality_probability <= 1:
@@ -75,7 +78,7 @@ class Student(Speaker):
                         self.intelligence_probability = self.intelligence.value / \
                             max(i.value for i in Intelligence)
 
-                    return super.generate_response(message)
+                    return super().generate_response(message)
 
                 else:
                     print("Student did NOT understand and is asking for clarification")
@@ -84,7 +87,7 @@ class Student(Speaker):
                     if self.intelligence_probability >= 0:
                         self.intelligence_probability -= self.intelligence_probability / 5
 
-                    return super.generate_response(Student.NOT_UNDERSTOOD)
+                    return super().generate_response(Student.NOT_UNDERSTOOD)
 
             else:
                 print("Student is silent")
