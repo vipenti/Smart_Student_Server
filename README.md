@@ -168,4 +168,4 @@ Contain the AudioManager class
 
 **Methods**
 
-* Not yet complete
+* Not yet completed, also need to add running requirements
