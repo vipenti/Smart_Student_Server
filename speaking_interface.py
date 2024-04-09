@@ -25,8 +25,8 @@ class Speaker:
 
     @voice.setter
     def voice(self, value):
-        if value in OpenAI_TTS_Manager.OPENAI_VOICES:
+        if value in OpenAI_TTS_Manager.VOICES:
             self.tts_manager.voice = value
         else:
             raise ValueError("Voice must be one of the following: " +
-                             ", ".join(OpenAI_TTS_Manager.OPENAI_VOICES) + ". Got: " + value)
+                             ", ".join(OpenAI_TTS_Manager.VOICES) + ". Got: " + value)

@@ -50,7 +50,7 @@ def start():
     # random_intelligence = random.choice(list(Intelligence))
     random_personality = Personality.CONFIDENT
     random_intelligence = Intelligence.HIGH
-    voice = random.choice(OpenAI_TTS_Manager.OPENAI_VOICES_ITA)
+    voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
 
     student = Student(random_personality, random_intelligence, subject, API_Key, voice)
 

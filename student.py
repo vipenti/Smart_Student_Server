@@ -38,7 +38,7 @@ class Student(Speaker):
     Il tuo compito è specificare se per una determinata frase è pertinente fare una domanda al professore oppure no.
     Rispondi solo con True o False"""
 
-    def __init__(self, personality, intelligence, subject, API_Key, voice=OpenAI_TTS_Manager.OPENAI_VOICES[0], completions_model="gpt-3.5-turbo", voice_model="tts-1"):
+    def __init__(self, personality, intelligence, subject, API_Key, voice=OpenAI_TTS_Manager.VOICES[0], completions_model="gpt-3.5-turbo", voice_model="tts-1"):
         self.personality = personality
         self.intelligence = intelligence
         self.personality_probability = self.personality.value / \

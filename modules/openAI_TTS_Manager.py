@@ -1,9 +1,9 @@
 import requests
 import io
 from modules.audioManager import AudioManager
+from TTS_Manager import TTS_Manager
 
-
-class OpenAI_TTS_Manager:
+class OpenAI_TTS_Manager(TTS_Manager):
     # Voice models available from OpenAI as of 8 March 2024
     MODELS = [
         "tts-1",
@@ -11,7 +11,7 @@ class OpenAI_TTS_Manager:
     ]
 
     # Voices available from OpenAI as of 8 March 2024
-    OPENAI_VOICES = [
+    VOICES = [
         "nova",
         "alloy",
         "echo",
@@ -21,17 +21,23 @@ class OpenAI_TTS_Manager:
     ]
 
     # Voices that work better with Italian language
-    OPENAI_VOICES_ITA = [
+    VOICES_ITA = [
         "echo",
         "fable",
         "onyx"
     ]
 
     def __init__(self, API_Key, model='tts-1', voice='nova'):
-        self.API_Key = API_Key  # OpenAI API Key
-        self.model = model      # OpenAI TTS model
-        self.voice = voice      # OpenAI TTS voice
-        self.recorder = AudioManager()  # AudioManager object to play the audio
+        if model not in self.MODELS:
+            raise ValueError("Model must be one of the following: " +
+                             ", ".join(self.MODELS) + ". Got: " + model)
+
+        if voice not in self.VOICES:
+            raise ValueError("Voice must be one of the following: " +
+                             ", ".join(self.VOICES) + ". Got: " + voice)
+        
+        
+        super().__init__(API_Key, model, voice)
 
     # Makes request to OpenAI TTS API, saves response as stream of bytes, and calls play_audio method from AudioManager on the stream
     # This allows for audio streaming and therefore real-time audio generation
