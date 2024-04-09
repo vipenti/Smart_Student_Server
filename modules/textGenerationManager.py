@@ -5,13 +5,13 @@ class TextGenerationManager:
     def __init__(self, API_Key, model, starting_prompt=""):
         self.API_Key = API_Key
 
-        self.model = model  # text generation model
+        self._model = model  # text generation model
 
         # System prompt to set up the conversation
-        self.starting_prompt = starting_prompt
+        self._starting_prompt = starting_prompt
 
         # List of messages exchanged in the conversation initialised with the starting prompt
-        self.messages = [self.starting_prompt]
+        self.messages = [starting_prompt]
 
     # Makes a request saving the history of the conversation
     def generate_response_history(self, message):
@@ -29,3 +29,27 @@ class TextGenerationManager:
     def clear_history(self):
         self.messages = []
         self.messages.append(self.starting_prompt)
+    
+    @property
+    def starting_prompt(self):
+        return self._starting_prompt
+    
+    @starting_prompt.setter
+    def starting_prompt(self, value):
+        
+        self._starting_prompt = value
+        self.messages = [self._starting_prompt]
+
+        self.clear_history()
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        if value not in self.MODELS:
+            raise ValueError("Model must be one of the following: " +
+                             ", ".join(self.MODELS) + ". Got: " + value)
+        else:
+            self._model = value

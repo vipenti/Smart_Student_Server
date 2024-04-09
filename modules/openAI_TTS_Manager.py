@@ -1,7 +1,7 @@
 import requests
 import io
 from modules.audioManager import AudioManager
-from TTS_Manager import TTS_Manager
+from modules.TTS_Manager import TTS_Manager
 
 class OpenAI_TTS_Manager(TTS_Manager):
     # Voice models available from OpenAI as of 8 March 2024

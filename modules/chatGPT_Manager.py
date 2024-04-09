@@ -1,5 +1,5 @@
 import openai
-from textGenerationManager import TextGenerationManager
+from modules.textGenerationManager import TextGenerationManager
 
 
 class ChatGPT_Manager(TextGenerationManager):
@@ -57,3 +57,11 @@ class ChatGPT_Manager(TextGenerationManager):
         )
 
         return reply.choices[0].message.content
+
+    @TextGenerationManager.starting_prompt.setter
+    def starting_prompt(self, value):
+        
+        self._starting_prompt = ({"role": "system", "content": value})
+        self.messages = [self._starting_prompt]
+
+        self.clear_history()

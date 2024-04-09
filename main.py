@@ -5,6 +5,7 @@ import warnings
 import json
 from student import Student, Personality, Intelligence
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.chatGPT_Manager import ChatGPT_Manager
 import random
 import tempfile
 
@@ -29,11 +30,14 @@ subject = input()
 # Create a student with random personality, intelligence and voice
 # random_personality = random.choice(list(Personality))
 # random_intelligence = random.choice(list(Intelligence))
-voice = random.choice(OpenAI_TTS_Manager.OPENAI_VOICES_ITA)
+voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
 # print(f"Personality: {random_personality.name}\nIntelligence: {random_intelligence.name}\nVoice: {voice}")
 
+tts_model = OpenAI_TTS_Manager(API_Key, voice= voice)
+completions_model = ChatGPT_Manager(API_Key)
+
 student = Student(Personality.CONFIDENT, Intelligence.HIGH,
-                  subject, API_Key, voice)
+                  subject, completions_model, tts_model)
 
 while True:
     # Record audio

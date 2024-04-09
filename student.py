@@ -1,5 +1,4 @@
 from enum import Enum
-from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from speaking_interface import Speaker
 import random
 
@@ -38,7 +37,7 @@ class Student(Speaker):
     Il tuo compito è specificare se per una determinata frase è pertinente fare una domanda al professore oppure no.
     Rispondi solo con True o False"""
 
-    def __init__(self, personality, intelligence, subject, API_Key, voice=OpenAI_TTS_Manager.VOICES[0], completions_model="gpt-3.5-turbo", voice_model="tts-1"):
+    def __init__(self, personality, intelligence, subject, text_manager, tts_manager):
         self.personality = personality
         self.intelligence = intelligence
         self.personality_probability = self.personality.value / \
@@ -50,7 +49,7 @@ class Student(Speaker):
         self.starting_prompt = Student.STARTING_PROMPT.format(
             subject=subject, difficulty=self.intelligence.value)
 
-        super().__init__(API_Key, voice, completions_model, voice_model, self.starting_prompt)
+        super().__init__(text_manager, tts_manager, self.starting_prompt)
 
     def generate_response(self, message, check_correlation=False):
         if message is None:
@@ -58,7 +57,7 @@ class Student(Speaker):
 
         # Check if the student should ask a question
         if check_correlation:
-            is_related = self.gpt_manager.generate_response(
+            is_related = self.text_manager.generate_response(
                 message, self.UNRELATED_QUESTION.format(subject=self.subject))
             
             print("Is related: " + is_related)
@@ -67,7 +66,7 @@ class Student(Speaker):
             is_related = "true"
 
         if not check_correlation or is_related.lower() == "true":
-            if random.random() <= self.personality_probability or True:
+            if random.random() <= self.personality_probability:
                 # Reset the personality probability if the student asked a question
                 if self.personality_probability <= 1:
                     self.personality_probability = self.personality.value / \
