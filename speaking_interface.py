@@ -16,5 +16,5 @@ class Speaker:
     def generate_response(self, message):
         return self.text_manager.generate_response_history(message)
 
-    def generate_audio(self, message):
-        return self.tts_manager.generate_audio(message)
+    def generate_audio(self, message, play_audio=True, format="mp3"):
+        return self.tts_manager.generate_audio(message, play_audio, format)
