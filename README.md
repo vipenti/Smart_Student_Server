@@ -6,7 +6,7 @@ AI is everywhere, let's bring it into the MetaVerse!
 
 ## What even is this?
 
-I'm simulating active listening and **curious** students in [SENEM](https://github.com/vipenti/SENEM_Metaverse) by [vipenti](https://github.com/vipenti)
+I'm simulating active listening and **curious** students
 
 Let's look at it step by step:
 1. A professor teaches his lesson while recording
