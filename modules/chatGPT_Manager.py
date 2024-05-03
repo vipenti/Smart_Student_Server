@@ -52,7 +52,6 @@ class ChatGPT_Manager(TextGenerationManager):
     def api_call(self, messages):
         reply = openai.chat.completions.create(
             model=self.model,
-
             messages=messages
         )
 

@@ -1,6 +1,4 @@
-import requests
-from TTS_Manager import TTS_Manager
-import io
+from modules.TTS_Manager import TTS_Manager
 
 class ElevenLabsTTS_Manager(TTS_Manager):
     # Voice models available
@@ -64,7 +62,7 @@ class ElevenLabsTTS_Manager(TTS_Manager):
     # Voices that work better with Italian language
     VOICES_ITA = VOICES
 
-    def __init__(self, API_Key, model, voice_name):
+    def __init__(self, API_Key, model="eleven_multilingual_v2", voice_name="Rachel"):
         if voice_name not in self.VOICES:
             raise ValueError("Voice must be one of the following: " +
                              ", ".join(self.VOICES) + ". Got: " + voice_name)
@@ -74,10 +72,8 @@ class ElevenLabsTTS_Manager(TTS_Manager):
         super().__init__(API_Key, model, voice)
 
     # Makes request to TTS API
-    def generate_audio(self, input_text, play_audio=False, format="mp3"):
-        _, voice_id =  list(self._voice.items())[0]
-
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    def generate_audio(self, input_text, play_audio=False, format="pcm_24000"):
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{self._voice}"
 
         headers = {
             "Content-Type": "application/json",
@@ -90,10 +86,10 @@ class ElevenLabsTTS_Manager(TTS_Manager):
             "text": f"{input_text}",
             "model_id": f"{self._model}",
             "voice_settings": {
-                "stability": 123,
-                "similarity_boost": 123,
-                "style": 123,
-                "use_speaker_boost": True
+                "stability": .5,
+                "similarity_boost": .7,
+                "style": 0,
+                "use_speaker_boost": False
             }
         }
 

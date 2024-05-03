@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, Response
 from student import Student, Personality, Intelligence
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.elevenLabsManager import ElevenLabsTTS_Manager
 from modules.chatGPT_Manager import ChatGPT_Manager
 import random
 import json
@@ -14,7 +15,8 @@ student = None
 model = None
 already_started = False
 can_ask_question = True
-API_Key = None
+OpenAI_Key = None
+ElevLabs_Key = None
 
 ALLOWED_FORMATS = [
     "m4a",
@@ -34,7 +36,8 @@ with app.app_context():
         data = json.load(config_file)
 
     # OpenAI API key
-    API_Key = data['API_KEY']
+    OpenAI_Key = data['OpenAI']
+    ElevLabs_Key = data['ElevenLabs']
 
 
 @app.route("/test", methods=["POST"])
@@ -51,10 +54,10 @@ def test():
 @app.route("/generate_question", methods=["POST"])
 def generate_question():
     global can_ask_question
-    student = Student(Personality.CONFIDENT, Intelligence.HIGH, "Fantasy", ChatGPT_Manager(API_Key), OpenAI_TTS_Manager(API_Key))
+    # student = Student(Personality.CONFIDENT, Intelligence.HIGH, "Fantasy", ChatGPT_Manager(OpenAI_Key), ElevenLabsTTS_Manager(ElevLabs_Key))
 
-    # if not already_started:
-    #     return jsonify({"error": "Studente non ancora creato!"})
+    if not already_started:
+        return jsonify({"error": "Studente non ancora creato!"})
 
     can_ask_question = True
 
@@ -73,11 +76,13 @@ def generate_question():
     print("[Whisper] Transcribing audio")
     transcription = model.transcribe(temp.name)
 
+    print("Transcription: ", transcription["text"])
+
     print("[Chat Completions] Generating response")
     reply = student.generate_response(transcription["text"])
 
     print("[Text-to-Speech] Generating audio")
-    response = Response(student.generate_audio(reply, play_audio=False), status=200, mimetype='audio/wav')
+    response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
 
     print("[Response] Sending response")
     return response
@@ -88,7 +93,7 @@ def start():
     global already_started
 
     if already_started:
-        return jsonify({"error": "Studente già creato!"})
+        return jsonify({"error": "Studente gia' creato!"})
 
     already_started = True
 
@@ -103,8 +108,8 @@ def start():
     random_intelligence = Intelligence.HIGH
     voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
 
-    tts_model = OpenAI_TTS_Manager(API_Key, voice=voice)
-    completions_model = ChatGPT_Manager(API_Key)
+    tts_model = OpenAI_TTS_Manager(OpenAI_Key, voice=voice)
+    completions_model = ChatGPT_Manager(OpenAI_Key)
 
     student = Student(random_personality, random_intelligence, subject, completions_model, tts_model)
 

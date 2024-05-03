@@ -17,8 +17,13 @@ class TTS_Manager:
             raise ValueError("Model must be one of the following: " +
                              ", ".join(self.MODELS) + ". Got: " + model)
         
-        if voice not in self.VOICES:
-            raise ValueError("Voice must be one of the following: " +
+        if(type(self.VOICES) is dict):
+            if voice not in list(self.VOICES.values()):
+                raise ValueError("Voice must be one of the following: " +
+                             ", ".join(self.VOICES) + ". Got: " + voice)
+        else:
+            if voice not in self.VOICES:
+                raise ValueError("Voice must be one of the following: " +
                              ", ".join(self.VOICES) + ". Got: " + voice)
 
         self.API_Key = API_Key  # API Key
@@ -27,7 +32,7 @@ class TTS_Manager:
         self.recorder = AudioManager()  # AudioManager object to play the audio
 
     # Makes request to TTS API
-    def generate_audio(self, input_text, play_audio=True, format="mp3"):
+    def generate_audio(self, input_text, play_audio=True, format=None):
         pass
 
     def api_call(self, url, headers, data, play_audio=False, params=None):

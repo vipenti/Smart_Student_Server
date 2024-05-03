@@ -1,6 +1,3 @@
-import requests
-import io
-from modules.audioManager import AudioManager
 from modules.TTS_Manager import TTS_Manager
 
 class OpenAI_TTS_Manager(TTS_Manager):

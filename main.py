@@ -15,7 +15,7 @@ with open('configs/API_key.json') as config_file:
     data = json.load(config_file)
 
 # OpenAI API key
-API_Key = data['API_KEY']
+API_Key = data['OpenAI']
 
 # Load the model
 print("Loading the model.")
