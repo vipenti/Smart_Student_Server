@@ -6,10 +6,10 @@ AI is everywhere, let's bring it into the MetaVerse!
 
 ## What even is this?
 
-I'm simulating active listening and **curious** students in [SENEM](https://github.com/vipenti/SENEM_Metaverse) by [vipenti](https://github.com/vipenti)
+I'm simulating active listening and **curious** students
 
 Let's look at it step by step:
-1. A professor teaches his lesson on SENEM
+1. A professor teaches his lesson while recording
 2. A random student is created with random attributes (such as intelligence, voice and personality)
 3. The program transcribes the speech thanks to Whisper
 4. Evaluates if it's needed to make a question based on what the teacher said
