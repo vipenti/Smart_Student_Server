@@ -92,8 +92,8 @@ def start():
     global student
     global already_started
 
-    if already_started:
-        return jsonify({"error": "Studente gia' creato!"})
+    # if already_started:
+    #     return jsonify({"error": "Studente gia' creato!"})
 
     already_started = True
 
