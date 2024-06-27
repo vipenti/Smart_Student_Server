@@ -1,13 +1,15 @@
 from flask import Flask, request, jsonify, Response
 from student import Student, Personality, Intelligence
-from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
-from modules.elevenLabsManager import ElevenLabsTTS_Manager
-from modules.chatGPT_Manager import ChatGPT_Manager
+from celery.result import AsyncResult
 import random
 import json
-import queue
 import tempfile
 import whisper
+
+from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
+from modules.chatGPT_Manager import ChatGPT_Manager
+from tasks import transcribe_audio, generate_audio, generate_text
+
 
 app = Flask(__name__)
 
@@ -39,7 +41,6 @@ with app.app_context():
     OpenAI_Key = data['OpenAI']
     ElevLabs_Key = data['ElevenLabs']
 
-
 @app.route("/test", methods=["POST"])
 def test():
     req = request.get_json()
@@ -49,7 +50,6 @@ def test():
     print("----------------")
 
     return jsonify(req)
-
 
 @app.route("/generate_question", methods=["POST"])
 def generate_question():
@@ -79,10 +79,12 @@ def generate_question():
     print("Transcription: ", transcription["text"])
 
     print("[Chat Completions] Generating response")
-    reply = student.generate_response(transcription["text"])
+    # reply = student.generate_response(transcription["text"])
 
     print("[Text-to-Speech] Generating audio")
-    response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
+    # response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
+
+    response = Response(audio_data, status=200, mimetype='audio/wav')
 
     print("[Response] Sending response")
     return response
@@ -115,11 +117,15 @@ def start():
 
     return jsonify({"message": "Studente creato con successo"})
 
+@app.get("/result/<id>")
+def task_result(id: str) -> dict[str, object]:
+    result = AsyncResult(id)
 
-def ask_question(question):
-    global student
-
-    student.generate_response(question)
+    return {
+        "ready": result.ready(),
+        "successful": result.successful(),
+        "value": result.result if result.ready() else None,
+    }
 
 if __name__ == "__main__":
     print("Smart student pronto all'uso\n[In ascolto sulla porta 5000]")
