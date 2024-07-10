@@ -1,24 +1,14 @@
+import base64
 from flask import Flask, request, jsonify, Response
 from student import Student, Personality, Intelligence
 from celery.result import AsyncResult
 import random
 import json
-import tempfile
 import whisper
 
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from modules.chatGPT_Manager import ChatGPT_Manager
-from tasks import transcribe_audio, generate_audio, generate_text
-
-
-app = Flask(__name__)
-
-student = None
-model = None
-already_started = False
-can_ask_question = True
-OpenAI_Key = None
-ElevLabs_Key = None
+from tasks import create_student, generate_spoken_question
 
 ALLOWED_FORMATS = [
     "m4a",
@@ -30,9 +20,18 @@ ALLOWED_FORMATS = [
     "mpeg",
 ]
 
+app = Flask(__name__)
+
+# student = None
+# model = None
+already_started = False
+can_ask_question = True
+OpenAI_Key = None
+ElevLabs_Key = None
+
 with app.app_context():
-    print("Loading the model.")
-    model = whisper.load_model("small")
+    # print("Loading the model.")
+    # model = whisper.load_model("small")
 
     with open('configs/API_key.json') as config_file:
         data = json.load(config_file)
@@ -53,79 +52,52 @@ def test():
 
 @app.route("/generate_question", methods=["POST"])
 def generate_question():
-    global can_ask_question
-    # student = Student(Personality.CONFIDENT, Intelligence.HIGH, "Fantasy", ChatGPT_Manager(OpenAI_Key), ElevenLabsTTS_Manager(ElevLabs_Key))
+        # if student is not created, return an error
+        if not already_started:
+            return Response("Studente non ancora creato!", status=400, mimetype='text/plain')
+        
+        # get the audio data from the request
+        print("[Request] Question generation requested")
+        audio_data = request.get_data()
 
-    if not already_started:
-        return jsonify({"error": "Studente non ancora creato!"})
+        # get the audio format from the request
+        audio_format = request.headers.get('Content-Type')
 
-    can_ask_question = True
+        # check if the audio format is supported
+        if audio_format.replace("audio/", "") not in ALLOWED_FORMATS:
+            return jsonify({"error": "Formato audio non supportato"})
 
-    print("[Request] Received data")
-    audio_data = request.get_data()
+        # start celery task to generate spoken question
+        task_result = generate_spoken_question.delay(audio_data)
 
-    audio_format = request.headers.get('Content-Type')
-
-    if audio_format.replace("audio/", "") not in ALLOWED_FORMATS:
-        return jsonify({"error": "Formato audio non supportato"})
-
-    with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
-        temp.write(audio_data)
-        temp.seek(0)
-    
-    print("[Whisper] Transcribing audio")
-    transcription = model.transcribe(temp.name)
-
-    print("Transcription: ", transcription["text"])
-
-    print("[Chat Completions] Generating response")
-    # reply = student.generate_response(transcription["text"])
-
-    print("[Text-to-Speech] Generating audio")
-    # response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
-
-    response = Response(audio_data, status=200, mimetype='audio/wav')
-
-    print("[Response] Sending response")
-    return response
+        # return the task id for the client to check the status
+        return {"result_id": task_result.id}
 
 @app.route("/start", methods=["POST"])
 def start():
-    global student
     global already_started
-
-    # if already_started:
-    #     return jsonify({"error": "Studente gia' creato!"})
-
     already_started = True
 
+    # get the subject from the request
     req = request.get_json()
-
     subject = req["subject"]
 
-    # Create a student with random personality, intelligence and voice
-    # random_personality = random.choice(list(Personality))
-    # random_intelligence = random.choice(list(Intelligence))
-    random_personality = Personality.CONFIDENT
-    random_intelligence = Intelligence.HIGH
-    voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
-
-    tts_model = OpenAI_TTS_Manager(OpenAI_Key, voice=voice)
-    completions_model = ChatGPT_Manager(OpenAI_Key)
-
-    student = Student(random_personality, random_intelligence, subject, completions_model, tts_model)
-
+    # start the celery task to instantiate the student
+    create_student.delay(subject, OpenAI_Key)
+    
     return jsonify({"message": "Studente creato con successo"})
 
-@app.get("/result/<id>")
+@app.route("/result/<id>", methods=["POST"])
 def task_result(id: str) -> dict[str, object]:
-    result = AsyncResult(id)
+    # get the task result from its id
+    task_result = AsyncResult(id)
 
-    return {
-        "ready": result.ready(),
-        "successful": result.successful(),
-        "value": result.result if result.ready() else None,
-    }
+    # return task ready status, successful status, and value if ready
+    return jsonify({
+        "ready": task_result.ready(),
+        "successful": task_result.successful(),
+        "value": task_result.result if task_result.ready() else None,
+    })
 
 if __name__ == "__main__":
     print("Smart student pronto all'uso\n[In ascolto sulla porta 5000]")

@@ -61,11 +61,13 @@ class Student(Speaker):
                 message, self.UNRELATED_QUESTION.format(subject=self.subject))
             
             print("Is related: " + is_related)
+
+            is_related = is_related.strip().lower()
         
         else:
             is_related = "true"
 
-        if not check_correlation or is_related.lower() == "true":
+        if not check_correlation or (is_related == "true"):
             if random.random() <= self.personality_probability:
                 # Reset the personality probability if the student asked a question
                 if self.personality_probability <= 1:
