@@ -5,6 +5,10 @@ import tempfile
 import whisper
 import random
 import base64
+import os
+import io
+import numpy as np
+import wave
 
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from modules.chatGPT_Manager import ChatGPT_Manager
@@ -65,3 +69,27 @@ def generate_spoken_question(self, audio_data):
 
     print("[Response] Sending response")
     return response
+
+@shared_task(bind=True, ignore_result=False)
+def test_task(self, duration = 1, sample_rate = 16000):
+    
+    # Number of samples
+    num_samples = duration * sample_rate
+    
+    # Generate random audio data
+    audio_data = np.random.randint(-32768, 32767, num_samples, dtype=np.int16)
+    
+    buffer = io.BytesIO()
+
+    # Write the audio data to a PCM file
+    with wave.open(buffer, 'w') as wf:
+        wf.setnchannels(1)  # Mono
+        wf.setsampwidth(2)  # 2 bytes per sample
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_data.tobytes())
+    
+    buffer.seek(0)
+    encoded_audio = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    print("[TEST] Sending response")
+    return encoded_audio

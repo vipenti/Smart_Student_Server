@@ -1,14 +1,12 @@
 import base64
-from flask import Flask, request, jsonify, Response
-from student import Student, Personality, Intelligence
+from flask import Flask, request, jsonify, Response, send_from_directory
 from celery.result import AsyncResult
-import random
 import json
-import whisper
+import os
 
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from modules.chatGPT_Manager import ChatGPT_Manager
-from tasks import create_student, generate_spoken_question
+from tasks import create_student, generate_spoken_question, test_task
 
 ALLOWED_FORMATS = [
     "m4a",
@@ -98,6 +96,16 @@ def task_result(id: str) -> dict[str, object]:
         "successful": task_result.successful(),
         "value": task_result.result if task_result.ready() else None,
     })
+
+@app.route("/test_stub", methods=["POST"])
+def test_stub():
+    # start celery task to return test value
+    task_result = test_task.delay()
+
+    # return the task id for the client to check the status
+    return {"result_id": task_result.id}
+        
+
 
 if __name__ == "__main__":
     print("Smart student pronto all'uso\n[In ascolto sulla porta 5000]")
