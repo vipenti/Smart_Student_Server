@@ -1,8 +1,6 @@
 from modules.textGenerationManager import TextGenerationManager
 from modules.TTS_Manager import TTS_Manager
 
-# TODO Create template method pattern design to decouple completions model and voice model
-
 class Speaker:
     def __init__(self, text_manager, tts_manager, starting_prompt):        
         self.starting_prompt = starting_prompt

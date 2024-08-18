@@ -61,6 +61,8 @@ def generate_spoken_question(self, audio_data):
         return "Studente rimasto in silenzio"
 
     print("[Text-to-Speech] Generating audio")
+
+    student.voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
     # response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
     response = student.generate_audio(reply, play_audio=False, format="pcm")
     # response = audio_data
