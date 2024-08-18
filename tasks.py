@@ -12,6 +12,7 @@ import wave
 
 from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
 from modules.chatGPT_Manager import ChatGPT_Manager
+from modules.whisper_Manager import Whisper_Manager
 from student import Student, Personality, Intelligence
 
 
@@ -19,13 +20,17 @@ flask_app = create_app()
 celery_app = flask_app.extensions["celery"]
 
 print("Loading the model.")
-model = whisper.load_model("small")
+# model = whisper.load_model("small")
 
 student = None
+model = None
 
 @shared_task(ignore_result=True)
 def create_student(subject, openAI_key):
     global student
+    global model
+
+    model = Whisper_Manager(openAI_key)
 
     # Create a student with random personality, intelligence and voice
     # random_personality = random.choice(list(Personality))
@@ -42,18 +47,22 @@ def create_student(subject, openAI_key):
 
 @shared_task(bind=True, ignore_result=False)
 def generate_spoken_question(self, audio_data):
+    global model
+
     # create a temporary file to store the audio data to sent to the model
-    with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
-        temp.write(audio_data)
-        temp.seek(0)
+    # with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
+    #     temp.write(audio_data)
+    #     temp.seek(0)
     
     print("[Whisper] Transcribing audio")
-    transcription = model.transcribe(temp.name)
+    # transcription = model.transcribe(temp.name)
+    transcription = model.transcribe(audio_data)
 
-    print("Transcription: ", transcription["text"])
+
+    print("Transcription: ", transcription)
 
     print("[Chat Completions] Generating response")
-    reply = student.generate_response(transcription["text"], check_correlation=False)
+    reply = student.generate_response(transcription, check_correlation=False)
 
     # if transcript is empty, return an error
     if reply is None:
