@@ -1,11 +1,7 @@
 from config import create_app
 from celery import shared_task 
-from flask import jsonify, Response
-import tempfile
-import whisper
 import random
 import base64
-import os
 import io
 import numpy as np
 import wave
@@ -46,18 +42,11 @@ def create_student(subject, openAI_key):
     return 
 
 @shared_task(bind=True, ignore_result=False)
-def generate_spoken_question(self, audio_data):
+def generate_written_question(self, audio_data):
     global model
 
-    # create a temporary file to store the audio data to sent to the model
-    # with tempfile.NamedTemporaryFile('wb+', delete=False) as temp:
-    #     temp.write(audio_data)
-    #     temp.seek(0)
-    
     print("[Whisper] Transcribing audio")
-    # transcription = model.transcribe(temp.name)
     transcription = model.transcribe(audio_data)
-
 
     print("Transcription: ", transcription)
 
@@ -69,13 +58,26 @@ def generate_spoken_question(self, audio_data):
         self.update_state(state='FAILURE')
         return "Studente rimasto in silenzio"
 
+    return reply
+
+
+@shared_task(bind=True, ignore_result=False)
+def generate_spoken_question(self, audio_data):
+    global model
+
+    # call task to generate written question
+    result = generate_written_question.delay(audio_data)
+    reply = result.get()
+   
     print("[Text-to-Speech] Generating audio")
 
+    # randomise the voice of the student
     student.voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
-    # response = Response(student.generate_audio(reply, play_audio=False, format="pcm"), status=200, mimetype='audio/wav')
-    response = student.generate_audio(reply, play_audio=False, format="pcm")
-    # response = audio_data
 
+    # generate audio response
+    response = student.generate_audio(reply, play_audio=False, format="pcm")
+
+    # encode the audio response in base64
     response = base64.b64encode(response.getvalue()).decode('utf-8')
 
     print("[Response] Sending response")
