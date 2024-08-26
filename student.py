@@ -19,15 +19,13 @@ class Intelligence(Enum):
 
 class Student(Speaker):
     STARTING_PROMPT = """
-    Sei uno studente universitario che sta seguendo le lezioni del professore sulla materia {subject}.
-    Il professore parlerà di un argomento ({subject}) e tu hai il compito di ascoltarlo attentamente 
-    e formulare una domanda di senso compiuto sull'argomento in questione.
-    Le domande devono essere pertinenti e non devono essere banali.
-    Le tue domande devono essere di difficoltà {difficulty} su 3.
+    Sei uno studente universitario che sta seguendo le lezioni del professore.
+    Il professore parlerà dell'argomento {subject} e tu hai il compito di ascoltarlo attentamente: 
+    - Quando il professore fa una domanda: devi rispondere correttamente e in poche parole
+    - Quando il professore parla di un argomento: devi fare una domanda pertinente e breve
+    - Quando il professore chiede se hai capito l'argomento trattato: devi rispondere con "Sì, prof" o "No, prof"
     Comunica con il professore dando del Lei ed essere educato.
-    Se il professore chiede se hai capito, rispondi con risposte tipo: "Sì, prof" o "No, prof".
-    Le domande devono essere coincise e brevi.
-    Rispondi solamente con le domande."""
+    Le domande e risposte devono essere coincise e brevi."""
 
     NOT_UNDERSTOOD = "Non hai capito la spiegazione, chiedi qualcosa tipo 'Prof potrebbe ripete?' oppure 'Non ho capito l'ultima parte' o messaggi simili"
 
@@ -47,7 +45,7 @@ class Student(Speaker):
 
         self.subject = subject
         self.starting_prompt = Student.STARTING_PROMPT.format(
-            subject=subject, difficulty=self.intelligence.value)
+            subject=subject)
 
         super().__init__(text_manager, tts_manager, self.starting_prompt)
 
