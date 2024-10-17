@@ -1,8 +1,8 @@
 # Simulating Students in a Metaverse
 
-This is project was made for my Internship at [SesaLab](https://github.com/SeSaLabUnisa) ([UniSa](https://unisa.it))
+This is project was made during my Internship at [SesaLab](https://github.com/SeSaLabUnisa) ([UniSa](https://unisa.it))
 
-AI is everywhere, let's bring it into the MetaVerse!
+AI is everywhere, let's bring it into the Metaverse!
 
 ## What even is this?
 
@@ -34,3 +34,7 @@ Where your OpenAI API key will be inserted, it should look like this:
     "API_KEY": "sk-didYouExpectToStealMyAPIkey?"
 }
 ```
+## But isn't this a server? A server for what?
+
+Yes, it is a server, for my other project [SENEM](https://github.com/KronosPNG/SENEM_Smart_Student). 
+You first run the server.py and then SENEM and see the magic at work!
