@@ -6,54 +6,57 @@ import io
 import numpy as np
 import wave
 
-from modules.openAI_TTS_Manager import OpenAI_TTS_Manager
-from modules.chatGPT_Manager import ChatGPT_Manager
-from modules.whisper_Manager import Whisper_Manager
-from student import Student, Personality, Intelligence
-
+from student import Student, Personality, Intelligence, Interest, Happyness
+from speaking_interface import Speaker
+import pyttsx3
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 flask_app = create_app()
 celery_app = flask_app.extensions["celery"]
 
-print("Loading the model.")
-# model = whisper.load_model("small")
+# Caricamento del modello Hugging Face
+print("Loading the Hugging Face model.")
+tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
+text_model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B")
+
+# Inizializzazione del sistema TTS locale
+tts_engine = pyttsx3.init()
+tts_engine.setProperty('rate', 150)  # Velocità del parlato
 
 student = None
-model = None
 
 @shared_task(ignore_result=True)
-def create_student(subject, openAI_key):
+def create_student(subject):
     global student
-    global model
 
-    model = Whisper_Manager(openAI_key)
+    # Creazione dello studente con valori casuali per le caratteristiche
+    random_personality = random.choice(list(Personality))
+    random_intelligence = random.choice(list(Intelligence))
+    random_interest = random.choice(list(Interest))
+    random_happyness = random.choice(list(Happyness))
 
-    # Create a student with random personality, intelligence and voice
-    # random_personality = random.choice(list(Personality))
-    # random_intelligence = random.choice(list(Intelligence))
-    random_personality = Personality.CONFIDENT
-    random_intelligence = Intelligence.HIGH
-    voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
-
-    tts_model = OpenAI_TTS_Manager(openAI_key, voice=voice)
-    completions_model = ChatGPT_Manager(openAI_key)
-
-    student = Student(random_personality, random_intelligence, subject, completions_model, tts_model)
+    # Instanzia lo studente con i valori casuali e i nuovi manager
+    student = Student(
+        personality=random_personality,
+        intelligence=random_intelligence,
+        interest=random_interest,
+        happyness=random_happyness,
+        subject=subject,
+    )
     return 
 
 @shared_task(bind=True, ignore_result=False)
 def generate_written_question(self, audio_data):
-    global model
-
+    # Trascrizione dell'audio con Whisper locale
     print("[Whisper] Transcribing audio")
-    transcription = model.transcribe(audio_data)
+    transcription = student.transcribe(audio_data)  # Usa Whisper locale
 
     print("Transcription: ", transcription)
 
-    print("[Chat Completions] Generating response")
+    print("[Chat Completion] Generating response")
     reply = student.generate_response(transcription, check_correlation=False)
 
-    # if transcript is empty, return an error
+    # Se la risposta è vuota, restituisce un errore
     if reply is None:
         self.update_state(state='FAILURE')
         return "Studente rimasto in silenzio"
@@ -63,41 +66,37 @@ def generate_written_question(self, audio_data):
 
 @shared_task(bind=True, ignore_result=False)
 def generate_spoken_question(self, audio_data):
-    global model
-
-    # call task to generate written question
+    # Richiama la funzione di generazione della domanda scritta
     result = generate_written_question.delay(audio_data)
     reply = result.get()
    
     print("[Text-to-Speech] Generating audio")
 
-    # randomise the voice of the student
-    student.voice = random.choice(OpenAI_TTS_Manager.VOICES_ITA)
+    # Genera l'audio della risposta
+    buffer = io.BytesIO()
+    tts_engine.save_to_file(reply, buffer)
+    buffer.seek(0)
 
-    # generate audio response
-    response = student.generate_audio(reply, play_audio=False, format="pcm")
-
-    # encode the audio response in base64
-    response = base64.b64encode(response.getvalue()).decode('utf-8')
+    # Codifica la risposta audio in base64
+    response = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     print("[Response] Sending response")
     return response
 
 @shared_task(bind=True, ignore_result=False)
-def test_task(self, duration = 1, sample_rate = 16000):
-    
-    # Number of samples
+def test_task(self, duration=1, sample_rate=16000):
+    # Numero di campioni
     num_samples = duration * sample_rate
     
-    # Generate random audio data
+    # Generazione di dati audio casuali
     audio_data = np.random.randint(-32768, 32767, num_samples, dtype=np.int16)
     
     buffer = io.BytesIO()
 
-    # Write the audio data to a PCM file
+    # Scrive i dati audio in un file PCM
     with wave.open(buffer, 'w') as wf:
         wf.setnchannels(1)  # Mono
-        wf.setsampwidth(2)  # 2 bytes per sample
+        wf.setsampwidth(2)  # 2 byte per campione
         wf.setframerate(sample_rate)
         wf.writeframes(audio_data.tobytes())
     

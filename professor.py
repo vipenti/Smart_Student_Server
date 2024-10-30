@@ -1,6 +1,5 @@
 from speaking_interface import Speaker
 
-
 class Professor(Speaker):
     STARTING_PROMPT = """
         Sei un professore che sta spiegando la sua lezione sulla materia {subject}.
@@ -12,8 +11,9 @@ class Professor(Speaker):
         Non concludere con ringraziamenti o domande.
         """
 
-    def __init__(self, API_key, subject, voice="nova", completions_model="gpt-3.5-turbo", voice_model="tts-1"):
-        self.starting_prompt = Professor.STARTING_PROMPT.format(
-            subject=subject)
+    def __init__(self, subject):
+        # Crea il prompt di partenza per il professore
+        self.starting_prompt = Professor.STARTING_PROMPT.format(subject=subject)
 
-        super().__init__(API_key, voice, completions_model, voice_model, self.starting_prompt)
+        # Inizializza la classe `Speaker` con il prompt di partenza
+        super().__init__(self.starting_prompt)

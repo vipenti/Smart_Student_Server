@@ -18,16 +18,6 @@ app = Flask(__name__)
 
 already_started = False
 can_ask_question = True
-OpenAI_Key = None
-ElevLabs_Key = None
-
-with app.app_context():
-    with open('configs/API_key.json') as config_file:
-        data = json.load(config_file)
-
-    # OpenAI API key
-    OpenAI_Key = data['OpenAI']
-    ElevLabs_Key = data['ElevenLabs']
 
 @app.route("/test", methods=["POST"])
 def test():
@@ -59,7 +49,7 @@ def question_generation(task_function):
     task_result = task_function.delay(audio_data)
 
     # return the task id for the client to check the status
-    return {"result_id": task_result.id}# if student is not created, return an error
+    return {"result_id": task_result.id}
 
 @app.route("/generate_written_question", methods=["POST"])
 def generate_question_string():
@@ -79,7 +69,7 @@ def start():
     subject = req["subject"]
 
     # start the celery task to instantiate the student
-    create_student.delay(subject, OpenAI_Key)
+    create_student.delay(subject)
     
     return jsonify({"message": "Studente creato con successo"})
 
@@ -106,5 +96,4 @@ def test_stub():
 
 if __name__ == "__main__":
     print("Smart student pronto all'uso\n[In ascolto sulla porta 5000]")
-    app.run(port = 5000)
-            
+    app.run(port=5000)
