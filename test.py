@@ -5,13 +5,15 @@ from student import Student, Personality, Intelligence, Interest, Happyness
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import random
 import torch
+import requests
+import json
 
 class StudentTest:
     def __init__(self, subject, personality=None, intelligence=None, interest=None, happyness=None):
         # Carica il modello di testo Hugging Face
         print("Caricamento del modello di Hugging Face...")
-        self.tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")  # oppure "distilgpt2"
-        self.model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B")
+        self.tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B")  # oppure "distilgpt2"
+        self.model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-1.3B")
 
         
         # Crea uno studente con caratteristiche specificate o casuali
@@ -59,13 +61,50 @@ class StudentTest:
         generated_response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         
         # Stampa la risposta generata senza il prompt
-        risposta = generated_response.replace(prompt_completo, "").strip()
+        risposta = generated_response.replace("Ciao, come stai oggi?", "").strip()
         print("\n[Studente] Risposta generata:")
         print(risposta)
 
+def api_call():
+    subject = "How to cook a pizza margherita"
+    transcription = """Making a homemade pizza starts with the dough base.
+        To make it, we need a few essential ingredients: flour, water, yeast, salt and
+        a drizzle of olive oil. We start by dissolving the yeast in a little warm water, which activates
+        the yeast and helps the dough rise. While the yeast dissolves, we can arrange the flour
+        in a fountain shape on a clean work surface or directly in a large bowl."""
+    
+    test = Student(
+        subject,
+        personality=Personality.OUTGOING,
+        intelligence=Intelligence.LOW,
+        interest=Interest.UNINTERESTED,
+        happyness=Happyness.SAD
+    )
+
+    student_prompt = test.starting_prompt
+    professor_prompt = "\n[Professor speech start:]" + transcription + " [Professor speech end]"
+    print(student_prompt)
+
+    message = {
+        "model": "meta-llama-3.1-8b-instruct",
+        "messages": [ 
+            { "role": "system", "content": student_prompt},
+            { "role": "user", "content": professor_prompt}
+    ], 
+    "temperature": 0.7, 
+    "max_tokens": -1
+    }
+
+    response = requests.post(url="http://192.168.4.53:1234/v1/chat/completions",json=message)
+
+    print(response)
 
 # Esempio di utilizzo della classe di test
 if __name__ == "__main__":
+
+    api_call()
+    
+def monnezza():
     subject = "La pizza margherita"
     transcription = """La preparazione di una pizza fatta in casa inizia con la base dell'impasto. 
     Per prepararlo, abbiamo bisogno di pochi ingredienti essenziali: farina, acqua, lievito, sale e 
@@ -83,4 +122,4 @@ if __name__ == "__main__":
     )
 
     # Passa una trascrizione e genera la risposta
-    test.pass_transcription(transcription)
+    test.pass_transcription("transcription")
