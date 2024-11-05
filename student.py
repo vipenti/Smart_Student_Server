@@ -1,6 +1,8 @@
 from enum import Enum
-from speaking_interface import Speaker
 import random
+import requests
+import re
+
 
 class Personality(Enum):
     SILENT = 1
@@ -9,12 +11,14 @@ class Personality(Enum):
     OUTGOING = 4
     CONFIDENT = 5
 
+
 class Intelligence(Enum):
     VERY_LOW = 1
     LOW = 2
     MEDIUM = 3
     HIGH = 4
     VERY_HIGH = 5
+
 
 class Interest(Enum):
     UNINTERESTED = 1
@@ -23,6 +27,7 @@ class Interest(Enum):
     INTERESTED = 4
     VERY_INTERESTED = 5
 
+
 class Happyness(Enum):
     SAD = 1
     UNHAPPY = 2
@@ -30,39 +35,37 @@ class Happyness(Enum):
     HAPPY = 4
     VERY_HAPPY = 5
 
-class Student(Speaker):
-    STARTING_PROMPT = """
-        Act as if you were a student attending a professor's lecture.
-        Impersonate a student with the following characteristics, which describe four parameters of the student's personality:
-        - Extroverted: {personality}
-        - Intelligence: {intelligence}
-        - Interested in the lecture: {interest}
-        - Happy: {happyness}
-        You will listen to the professor's presentation, whose main topic will be: {subject}. You have the task of behaving like a realistic student, more specifically you can:
-        - Answer a question posed by the professor. The answer must be short and concise, as if a student were answering.
-        - Ask questions to the professor. The question you ask must be about the presentation you are listening to and can be (1) a request for clarification, (2) a question for further information, (3) asking to repeat a part that you think was not clear.
 
-        Impersonate the student following the parameters of your personality. The answer must report only and exclusively the student's words.
-        """
+def clean_answer(answer):
+    cleaned_answer = re.sub(r'\[.*?\]|\*.*?\*', '', answer)
+    return ' '.join(cleaned_answer.split())
 
-    NOT_UNDERSTOOD = "You didn't understand the explanation, following your personality, ask the professor to repeat."
 
-    UNRELATED_QUESTION = """
-        You are the professor's assistant. You will listen to the professor's lecture and must decide whether or not the students should ask questions.
-        The topic of today's lecture is {subject}.
-        Your task is to specify whether or not a given sentence is relevant to ask the professor a question.
-        Answer only with True or False"""
+class Student:
+    STARTING_PROMPT = """Act as if you were a student attending a professor's lecture. Impersonate a student with the 
+    following characteristics, which describe four parameters of the student's personality: 
+    - Extroverted: {personality} 
+    - Intelligence: {intelligence} 
+    - Interested in the lecture: {interest} 
+    - Happy: {happyness} 
 
-    def __init__(self, subject, personality=None, intelligence=None, interest=None, happyness=None):
+    You will listen to the professor's presentation, whose main topic will be: {subject}. You have the task of behaving like a 
+    realistic student, more specifically you can: 
+    - Answer a question posed by the professor. The answer must be short and concise, as if a student were answering. 
+    - Ask questions to the professor. The question you ask must be about the presentation you are listening to and can be 
+      (1) a request for clarification, (2) a question for further information, (3) asking to repeat a part that you think 
+      was not clear. 
+
+    Impersonate the student following the parameters of your personality. The answer must report only and exclusively 
+    the student's words. Provide only the student's vocal response, absolutely avoiding any description of actions or 
+    thoughts, such as "*looks down*", "[laughs]", etc. Spoken words only."""
+
+    def __init__(self, subject, personality, intelligence, interest, happyness):
         # Assegna i valori passati o genera casualmente
         self.personality = personality if personality is not None else random.choice(list(Personality))
         self.intelligence = intelligence if intelligence is not None else random.choice(list(Intelligence))
         self.interest = interest if interest is not None else random.choice(list(Interest))
         self.happyness = happyness if happyness is not None else random.choice(list(Happyness))
-
-        # Calcola le probabilità basate sui valori di personalità e intelligenza
-        self.personality_probability = self.personality.value / max(i.value for i in Personality)
-        self.intelligence_probability = self.intelligence.value / max(i.value for i in Intelligence)
 
         self.subject = subject
         self.starting_prompt = Student.STARTING_PROMPT.format(
@@ -73,45 +76,21 @@ class Student(Speaker):
             happyness=self.happyness.name
         )
 
-        # Inizializza la classe genitore `Speaker` con il prompt di partenza
-        super().__init__(self.starting_prompt)
+    def generate_response(self, transcription):
+        student_prompt = self.starting_prompt
+        professor_prompt = "\n[Professor speech start:]" + transcription + " [Professor speech end]"
+        message = {
+            "model": "meta-llama-3.1-8b-instruct",
+            "messages": [
+                {"role": "system", "content": student_prompt},
+                {"role": "user", "content": professor_prompt}
+            ],
+            "temperature": 0.9,
+            "max_tokens": -1
+        }
 
-    def generate_response(self, message, check_correlation=False):
-        if message is None:
-            raise ValueError("Message cannot be None")
+        response = requests.post(url="http://127.0.0.1:1234/v1/chat/completions", json=message)
+        response_data = response.json()
 
-        # Check if the student should ask a question
-        if check_correlation:
-            is_related = self.text_manager.generate_response(message, self.UNRELATED_QUESTION.format(subject=self.subject))
-            print("Is related: " + is_related)
-            is_related = is_related.strip().lower()
-        else:
-            is_related = "true"
-
-        if not check_correlation or (is_related == "true"):
-            if random.random() <= self.personality_probability:
-                if self.personality_probability <= 1:
-                    self.personality_probability = self.personality.value / max(i.value for i in Personality)
-
-                if random.random() <= self.intelligence_probability:
-                    print("Student understood and is asking a question")
-                    if self.intelligence_probability <= 1:
-                        self.intelligence_probability = self.intelligence.value / max(i.value for i in Intelligence)
-
-                    return super().generate_response(message)
-                else:
-                    print("Student did NOT understand and is asking for clarification")
-                    if self.intelligence_probability >= 0:
-                        self.intelligence_probability -= self.intelligence_probability / 5
-
-                    return super().generate_response(Student.NOT_UNDERSTOOD)
-            else:
-                print("Student is silent")
-                if self.personality_probability >= 0:
-                    self.personality_probability -= self.personality_probability / 5
-
-                return None
-        elif is_related.lower() == "false":
-            print("Professor speaking off-topic")
-        else:
-            raise ValueError("Invalid pertinence check from API call. Got: " + is_related + ". Expected: True or False.")
+        content_message = clean_answer(response_data["choices"][0]["message"]["content"])
+        return content_message

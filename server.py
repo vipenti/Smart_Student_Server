@@ -19,6 +19,7 @@ app = Flask(__name__)
 already_started = False
 can_ask_question = True
 
+
 @app.route("/test", methods=["POST"])
 def test():
     req = request.get_json()
@@ -29,12 +30,11 @@ def test():
 
     return jsonify(req)
 
+
 def question_generation(task_function):
-    # if student is not created, return an error
     if not already_started:
-        return Response("Studente non ancora creato!", status=400, mimetype='text/plain')
-    
-    # get the audio data from the request
+        return Response("Student not yet created!", status=400, mimetype='text/plain')
+
     print("[Request] Question generation requested")
     audio_data = request.get_data()
 
@@ -43,7 +43,7 @@ def question_generation(task_function):
 
     # check if the audio format is supported
     if audio_format.replace("audio/", "") not in ALLOWED_FORMATS:
-        return Response("Formato audio invalido", status=400, mimetype='text/plain')
+        return Response("Invalid audio format", status=400, mimetype='text/plain')
 
     # start celery task to generate question with callback function
     task_result = task_function.delay(audio_data)
@@ -51,13 +51,16 @@ def question_generation(task_function):
     # return the task id for the client to check the status
     return {"result_id": task_result.id}
 
+
 @app.route("/generate_written_question", methods=["POST"])
 def generate_question_string():
     return question_generation(generate_written_question)
 
+
 @app.route("/generate_question", methods=["POST"])
 def generate_question():
     return question_generation(generate_spoken_question)
+
 
 @app.route("/start", methods=["POST"])
 def start():
@@ -68,10 +71,12 @@ def start():
     req = request.get_json()
     subject = req["subject"]
 
+
     # start the celery task to instantiate the student
     create_student.delay(subject)
-    
+
     return jsonify({"message": "Studente creato con successo"})
+
 
 @app.route("/result/<id>", methods=["POST"])
 def task_result(id: str) -> dict[str, object]:
@@ -85,6 +90,7 @@ def task_result(id: str) -> dict[str, object]:
         "value": task_result.result if task_result.ready() else None,
     })
 
+
 @app.route("/test_stub", methods=["POST"])
 def test_stub():
     # start celery task to return test value
@@ -95,5 +101,5 @@ def test_stub():
 
 
 if __name__ == "__main__":
-    print("Smart student pronto all'uso\n[In ascolto sulla porta 5000]")
+    print("Smart Student ready on port 5000!")
     app.run(port=5000)

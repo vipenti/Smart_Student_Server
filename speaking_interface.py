@@ -1,6 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import pyttsx3
 
+
 class TextGenerationManager:
     def __init__(self, model_name="EleutherAI/gpt-neo-2.7B"):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -11,6 +12,7 @@ class TextGenerationManager:
         outputs = self.model.generate(inputs.input_ids, max_length=150)
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+
 class TTS_Manager:
     def __init__(self):
         self.tts_engine = pyttsx3.init()
@@ -20,9 +22,10 @@ class TTS_Manager:
         if play_audio:
             self.tts_engine.say(message)
             self.tts_engine.runAndWait()
-            
+
+
 class Speaker:
-    def __init__(self, starting_prompt):        
+    def __init__(self, starting_prompt):
         self.starting_prompt = starting_prompt
 
         # Inizializza i manager per Hugging Face e TTS locale

@@ -1,23 +1,15 @@
 from config import create_app
-from celery import shared_task 
-import random
+from celery import shared_task
 import base64
 import io
 import numpy as np
 import wave
 
-from student import Student, Personality, Intelligence, Interest, Happyness
-from speaking_interface import Speaker
+from student import Student
 import pyttsx3
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 flask_app = create_app()
 celery_app = flask_app.extensions["celery"]
-
-# Caricamento del modello Hugging Face
-print("Loading the Hugging Face model.")
-tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
-text_model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B")
 
 # Inizializzazione del sistema TTS locale
 tts_engine = pyttsx3.init()
@@ -25,41 +17,36 @@ tts_engine.setProperty('rate', 150)  # Velocità del parlato
 
 student = None
 
+
 @shared_task(ignore_result=True)
-def create_student(subject):
+def create_student(subject, personality, intelligence, interest, happyness):
     global student
 
-    # Creazione dello studente con valori casuali per le caratteristiche
-    random_personality = random.choice(list(Personality))
-    random_intelligence = random.choice(list(Intelligence))
-    random_interest = random.choice(list(Interest))
-    random_happyness = random.choice(list(Happyness))
-
-    # Instanzia lo studente con i valori casuali e i nuovi manager
     student = Student(
-        personality=random_personality,
-        intelligence=random_intelligence,
-        interest=random_interest,
-        happyness=random_happyness,
+        personality=personality,
+        intelligence=intelligence,
+        interest=interest,
+        happyness=happyness,
         subject=subject,
     )
-    return 
+    return
+
 
 @shared_task(bind=True, ignore_result=False)
 def generate_written_question(self, audio_data):
-    # Trascrizione dell'audio con Whisper locale
+
     print("[Whisper] Transcribing audio")
     transcription = student.transcribe(audio_data)  # Usa Whisper locale
 
     print("Transcription: ", transcription)
 
-    print("[Chat Completion] Generating response")
+    print("Generating response...")
     reply = student.generate_response(transcription, check_correlation=False)
 
     # Se la risposta è vuota, restituisce un errore
     if reply is None:
         self.update_state(state='FAILURE')
-        return "Studente rimasto in silenzio"
+        return "Student stayed silent"
 
     return reply
 
@@ -69,8 +56,8 @@ def generate_spoken_question(self, audio_data):
     # Richiama la funzione di generazione della domanda scritta
     result = generate_written_question.delay(audio_data)
     reply = result.get()
-   
-    print("[Text-to-Speech] Generating audio")
+
+    print("Generating audio...")
 
     # Genera l'audio della risposta
     buffer = io.BytesIO()
@@ -83,14 +70,15 @@ def generate_spoken_question(self, audio_data):
     print("[Response] Sending response")
     return response
 
+
 @shared_task(bind=True, ignore_result=False)
 def test_task(self, duration=1, sample_rate=16000):
     # Numero di campioni
     num_samples = duration * sample_rate
-    
+
     # Generazione di dati audio casuali
     audio_data = np.random.randint(-32768, 32767, num_samples, dtype=np.int16)
-    
+
     buffer = io.BytesIO()
 
     # Scrive i dati audio in un file PCM
@@ -99,7 +87,7 @@ def test_task(self, duration=1, sample_rate=16000):
         wf.setsampwidth(2)  # 2 byte per campione
         wf.setframerate(sample_rate)
         wf.writeframes(audio_data.tobytes())
-    
+
     buffer.seek(0)
     encoded_audio = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
