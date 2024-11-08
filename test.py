@@ -1,4 +1,11 @@
 from student import Student, Personality, Intelligence, Interest, Happyness
+from tasks import generate_audio_response_task
+import base64
+from pydub import AudioSegment
+
+# Esegui il task con i parametri di test
+
+output_path = "C:\\Users\\39347\\Documents\\GitHub\\Smart_Student_Server\\sounds\\test.wav"
 
 
 def api_call():
@@ -30,6 +37,12 @@ def api_call():
 
     print(test.generate_response(transcription))
 
+def celery_test():
+    with open(output_path, "rb") as audio_file:
+        audio_data = base64.b64encode(audio_file.read()).decode('utf-8')
+    generate_audio_response_task(audio_data, "3D Modeling", Personality.SHY, Intelligence.LOW, Interest.UNINTERESTED, Happyness.SAD)
+
+
 
 if __name__ == "__main__":
-    api_call()
+    celery_test()

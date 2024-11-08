@@ -89,8 +89,10 @@ class Student:
             "max_tokens": -1
         }
 
-        response = requests.post(url="http://127.0.0.1:1234/v1/chat/completions", json=message)
+        response = requests.post(url="http://25.53.69.231:1234/v1/chat/completions", json=message)
         response_data = response.json()
 
         content_message = clean_answer(response_data["choices"][0]["message"]["content"])
+        print(content_message)
         return content_message
+
