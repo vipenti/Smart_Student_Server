@@ -3,59 +3,57 @@ from student import Student, Personality, Intelligence, Interest, Happyness
 import whisper
 import pyttsx3
 import base64
-import io
 import os
-from pydub import AudioSegment
-import numpy as np
-from scipy.io import wavfile
+import torch
+import torchaudio
+from silero import silero_tts
 
 # Configura Celery per il task broker
-app = Celery('tasks', broker='redis://localhost:6379/0')
+app = Celery('tasks', broker='redis://localhost:6379/0', backend='redis://localhost:6379/0')
 
 @app.task
 def generate_audio_response_task(audio_data, subject, personality, intelligence, interest, happyness):
 
-    # Decodifica i dati audio in base64 e li converte in un AudioSegment
-    audio_bytes = base64.b64decode(audio_data)
-    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="wav")
+    output_path = os.path.join(os.path.dirname(__file__), "sounds/to_transcribe.wav")
 
-    # Salva l'audio come file temporaneo in un buffer per Whisper
-    buffer = io.BytesIO()
-    audio.export(buffer, format="wav")
-    buffer.seek(0)
+    with open(output_path, "wb") as audio_file:
+        audio_file.write(base64.b64decode(audio_data))
 
-    # Carica i dati audio come array numpy per Whisper
-    sample_rate, audio_array = wavfile.read(buffer)
-    audio_array = audio_array.astype(np.float32) / 32768.0  # Normalizza a float32
+    model = whisper.load_model("base")
 
-    # Converte i tratti di personalità in oggetti Enum
+    transcription = model.transcribe(output_path)['text']
+    print(f"Transcribed test: {transcription}")
+    os.remove(output_path)
+
     personality = Personality(personality)
     intelligence = Intelligence(intelligence)
     interest = Interest(interest)
     happyness = Happyness(happyness)
 
-    # Inizializza lo studente con i tratti convertiti
     student = Student(subject, personality, intelligence, interest, happyness)
-
-    # Utilizza Whisper per trascrivere l’audio
-    transcriber = whisper.load_model("base")
-    transcription = transcriber.transcribe(audio_array, language="en")["text"]
-    print(f"Transcribed test: {transcription}")
-
-    # Genera la risposta dello studente utilizzando il modello LLaMA
     response_text = student.generate_response(transcription)
 
-    # Converte la risposta in audio con pyttsx3, salvando su file temporaneo
-    tts_engine = pyttsx3.init()
-    temp_audio_path = "response_audio.wav"
-    tts_engine.save_to_file(response_text, temp_audio_path)
-    tts_engine.runAndWait()
+    temp_audio_path = os.path.join(os.path.dirname(__file__), "tmp/response_audio.wav")
+    generate_audio(response_text, temp_audio_path)
 
-    # Leggi il file temporaneo e converti l'audio in base64
     with open(temp_audio_path, "rb") as audio_file:
         audio_base64 = base64.b64encode(audio_file.read()).decode('utf-8')
 
-    # Rimuovi il file temporaneo
-    os.remove(temp_audio_path)
+    #os.remove(temp_audio_path)
 
     return audio_base64
+
+
+def generate_audio(text, path):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
+    language = 'en'
+    speaker = 'random'
+    model, example_text = torch.hub.load(repo_or_dir='snakers4/silero-models',
+                                         model='silero_tts',
+                                         language=language,
+                                         speaker='v3_en')
+
+    audio = model.apply_tts(text=text, speaker=speaker)
+    torchaudio.save(path, torch.tensor(audio).unsqueeze(0), 48000)
+
