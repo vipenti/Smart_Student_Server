@@ -1,17 +1,12 @@
 from flask import Flask, request, jsonify
-from tasks import generate_audio_response_task
+from tasks import generate_audio_response_task, generate_full_response_task
 import os
 
 os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH', '')}:{os.getcwd()}"
 os.environ["FLASK_APP"] = "server.py"
 app = Flask(__name__)
 
-@app.route('/generate_audio_response', methods=['POST'])
-def generate_audio_response():
-    data = request.get_json()
-    #print("Richiesta JSON ricevuta:", data)  # Log per verificare i dati
-
-    # Continua solo se 'audio' è presente in 'data'
+def generate_response(data, callback):
     if 'audio' not in data:
         return jsonify({"error": "Campo 'audio' mancante nella richiesta"}), 400
 
@@ -21,11 +16,25 @@ def generate_audio_response():
     personality = data['personality']
     intelligence = data['intelligence']
     interest = data['interest']
-    happyness = data['happyness']
+    happiness = data['happiness']
 
     # Avvia il task asincrono per generare la risposta audio
-    task = generate_audio_response_task.delay(audio_data, subject, personality, intelligence, interest, happyness)
+    task = callback.delay(audio_data, subject, personality, intelligence, interest, happiness)
     return jsonify({"task_id": task.id}), 202
+
+
+
+@app.route('/generate_audio_response', methods=['POST'])
+def generate_audio_response():
+    data = request.get_json()
+
+    return generate_response(data, generate_audio_response_task)
+
+@app.route('/generate_full_response', methods=['POST'])
+def generate_full_response():
+    data = request.get_json()
+
+    return generate_response(data, generate_full_response_task)
 
 
 @app.route('/result/<task_id>', methods=['GET'])

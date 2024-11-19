@@ -1,5 +1,5 @@
 from celery import Celery
-from student import Student, Personality, Intelligence, Interest, Happyness
+from student import Student, Personality, Intelligence, Interest, Happiness
 import whisper
 import pyttsx3
 import base64
@@ -12,8 +12,7 @@ from silero import silero_tts
 app = Celery('tasks', broker='redis://localhost:6379/0', backend='redis://localhost:6379/0')
 
 @app.task
-def generate_audio_response_task(audio_data, subject, personality, intelligence, interest, happyness):
-
+def generate_text_response_task(audio_data, subject, personality, intelligence, interest, happiness):
     output_path = os.path.join(os.path.dirname(__file__), "sounds/to_transcribe.wav")
 
     with open(output_path, "wb") as audio_file:
@@ -28,10 +27,19 @@ def generate_audio_response_task(audio_data, subject, personality, intelligence,
     personality = Personality(personality)
     intelligence = Intelligence(intelligence)
     interest = Interest(interest)
-    happyness = Happyness(happyness)
+    happiness = Happiness(happiness)
 
-    student = Student(subject, personality, intelligence, interest, happyness)
+    student = Student(subject, personality, intelligence, interest, happiness)
     response_text = student.generate_response(transcription)
+
+    return response_text
+
+@app.task
+def generate_audio_response_task(audio_data, subject, personality, intelligence, interest, happiness):
+
+    response_task = generate_text_response_task.delay(audio_data, subject, personality, intelligence, interest, happiness)
+
+    response_text = response_task.get()
 
     temp_audio_path = os.path.join(os.path.dirname(__file__), "tmp/response_audio.wav")
     generate_audio(response_text, temp_audio_path)
@@ -43,6 +51,9 @@ def generate_audio_response_task(audio_data, subject, personality, intelligence,
 
     return audio_base64
 
+@app.task
+def generate_full_response_task(audio_data, subject, personality, intelligence, interest, happiness):
+    return None
 
 def generate_audio(text, path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
