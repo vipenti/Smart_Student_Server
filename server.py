@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from tasks import generate_audio_response_task, generate_full_response_task
+from tasks import generate_audio_response_task
 import os
 
 os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH', '')}:{os.getcwd()}"
@@ -23,25 +23,18 @@ def generate_response(data, callback):
     return jsonify({"task_id": task.id}), 202
 
 
-
 @app.route('/generate_audio_response', methods=['POST'])
 def generate_audio_response():
     data = request.get_json()
 
     return generate_response(data, generate_audio_response_task)
 
-@app.route('/generate_full_response', methods=['POST'])
-def generate_full_response():
-    data = request.get_json()
-
-    return generate_response(data, generate_full_response_task)
-
-
 @app.route('/result/<task_id>', methods=['GET'])
 def get_result(task_id):
     result = generate_audio_response_task.AsyncResult(task_id)
+
     if result.ready():
-        return jsonify({"status": "completed", "audio": result.result})
+        return jsonify({"status": "completed", "text": result.result.get("text"), "audio": result.result.get("audio")})
     else:
         return jsonify({"status": "pending"})
 

@@ -49,11 +49,13 @@ def generate_audio_response_task(audio_data, subject, personality, intelligence,
 
     #os.remove(temp_audio_path)
 
-    return audio_base64
+    response = {
+        "text": response_text,
+        "audio": audio_base64
+    }
 
-@app.task
-def generate_full_response_task(audio_data, subject, personality, intelligence, interest, happiness):
-    return None
+    return response
+    
 
 def generate_audio(text, path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
