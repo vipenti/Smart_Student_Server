@@ -1,0 +1,14 @@
+celery==5.4.0
+Flask==3.1.0
+keyboard==0.13.5
+openai==1.55.1
+openai_whisper==20231117
+PyAudio==0.2.14
+pyttsx3==2.98
+Requests==2.32.3
+silero==0.4.1
+soundfile==0.12.1
+torch==2.5.1
+torchaudio==2.5.1
+transformers==4.46.3
+webrtcvad==2.0.10

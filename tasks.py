@@ -1,5 +1,4 @@
 from celery import Celery
-from celery.signals import worker_process_init
 from student import Student, Personality, Intelligence, Interest, Happiness
 import whisper
 import pyttsx3
