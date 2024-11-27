@@ -13,3 +13,4 @@ torchaudio==2.5.1
 transformers==4.46.3
 webrtcvad==2.0.10
 gevent==24.11.1
+redis==5.2.0
