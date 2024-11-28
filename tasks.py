@@ -37,7 +37,7 @@ def generate_text_response_task(audio_data, subject, personality, intelligence, 
     # Transcribe the audio
     transcription = model.transcribe(output_path)['text']
     print(f"Transcribed test: {transcription}")
-    os.remove(output_path)
+    # os.remove(output_path)
 
     # Create the student object with the given parameters
     personality = Personality(personality)
