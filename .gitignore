@@ -5,6 +5,7 @@
 
 # text files
 *.txt
+!requirements.txt
 
 # pyc files
 *.pyc
