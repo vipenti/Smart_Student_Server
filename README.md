@@ -1,40 +1,76 @@
-# Simulating Students in a Metaverse
+# SENEM-AI LLM Server
 
-This is project was made during my Internship at [SesaLab](https://github.com/SeSaLabUnisa) ([UniSa](https://unisa.it))
+This repository contains the backend server for the [SENEM-AI project](https://github.com/vipenti/SENEM_Metaverse). It provides the logic for managing the smart students and facilitates communication between the Unity-based main project and the LLM (Large Language Model).
 
-AI is everywhere, let's bring it into the Metaverse!
+---
 
-## What even is this?
+## How Does It Work?
+The server manages the interaction between the virtual students on the SENEM-AI platform and the LLM. It capture the teacher's speech and transcribe it to generate a student's answer. More specifically, the main components are the following:
 
-I'm simulating active listening and **curious** students
+1. **student.py**: This defines the behavior and personality traits of the simulated students. It includes personality, intelligence, interest, and happiness parameters that influence the students' interactions during a lecture. Using a starting prompt and input from the professor's speech, it generates responses by interacting with an LLM endpoint.
 
-Let's look at it step by step:
-1. A professor teaches his lesson while recording
-2. A random student is created with random attributes (such as intelligence, voice and personality)
-3. The program transcribes the speech thanks to Whisper
-4. Evaluates if it's needed to make a question based on what the teacher said
-(also based on randomised students personality and intelligence)
-5. Eventually Makes an API call to the Text Completion API and thus creates a question
-6. *Asks* the question by voice using OpenAI's TTS API
+2. **server.py**: The server's core, built with Flask. It handles communication between Unity and the backend. It receives the speaker's audio data and the student's personality traits, and it provides endpoints for generating text-based and audio-based responses using asynchronous tasks. 
 
-Basically a simulated classroom of students that are listening, participating and active
+3. **tasks.py**: Manages the asynchronous logic using Celery and Redis to handle multiple student interactions. It processes audio input by transcribing it with Whisper, generates text responses by leveraging the Student class, and optionally converts these responses into audio using Silero TTS.
 
-# How does it work?
+---
 
-As simple as running the python script!
+## Prerequisites
 
-You'll just need to create a folder named configs in under the project folder
+Before running the project, ensure the following prerequisites are met:
 
-Then you'll need to create a **.json** file named ```API_key.json``` 
+1. **Python 3.9**: Required for the server and AI backend.
+2. **Dependencies**: Install all dependencies listed in `requirements.txt`.
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **WSL (Optional)**: If running the server on Windows, Windows Subsystem for Linux (WSL) may be required to run Redis. Install it with:
+   ```bash
+   wsl --install
+   ```
+4. **Large Language Model (LLM)**: Any LLM capable of handling POST requests can be used. We recommend using [LLM Studio](https://https://lmstudio.ai/) to host a model locally or on a server.
 
-Where your OpenAI API key will be inserted, it should look like this:
+---
 
-```
-{
-    "API_KEY": "sk-didYouExpectToStealMyAPIkey?"
-}
-```
-## But isn't this a server? A server for what?
+## Setup and Startup Instructions
 
-Yes, it is a server, for my other project [SENEM](https://github.com/KronosPNG/SENEM_Smart_Student). 
-You first run the server.py and then SENEM and see the magic at work!
+Follow these steps to set up and start the server:
+
+1. **(Windows Only)**: Open a new shell in the project directory and launch WSL by running:
+   ```bash
+   wsl
+   ```
+   *Skip this step if you are not using Windows.*
+
+2. **Start Redis**:
+   In the same shell, start the Redis server as an administrator:
+   ```bash
+   sudo service redis-server start
+   ```
+
+3. **Start Celery Worker**:
+   Open another shell and run the following command to start the Celery worker:
+   ```bash
+   celery -A tasks worker -l info
+   ```
+
+4. **Configure the LLM URL**:
+   Open the `student.py` file and set the `LLM_url` variable to the URL of your running LLM instance. For example:
+   ```python
+   LLM_url = "http://localhost:5000/endpoint"
+   ```
+
+5. **Start the Server**:
+   Run the `server.py` script to start the server:
+   ```bash
+   python server.py
+   ```
+
+Your server is now up and running!
+
+---
+
+ 
+
+
+
