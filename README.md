@@ -51,13 +51,13 @@ Follow these steps to set up and start the server:
 3. **Start Celery Worker**:
    Open another shell and run the following command to start the Celery worker:
    ```bash
-   celery -A tasks worker -l info
+   celery -A tasks worker -l info -P gevent
    ```
 
 4. **Configure the LLM URL**:
    Open the `student.py` file and set the `LLM_url` variable to the URL of your running LLM instance. For example:
    ```python
-   LLM_url = "http://localhost:5000/endpoint"
+   LLM_URL = "http://localhost:5000/endpoint"
    ```
 
 5. **Start the Server**:
