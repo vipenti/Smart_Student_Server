@@ -22,7 +22,9 @@ def generate_text_response_task(audio_data, subject, personality, intelligence, 
     global model
 
     output_dir = os.path.join(os.path.dirname(__file__), "sounds")
+    print("DEBUG: " + output_dir)
     output_path = os.path.join(output_dir, "to_transcribe.wav")
+    print("DEBUG: " + output_path)
 
     # Check if the folder exists, otherwise create it
     if not os.path.exists(output_dir):
@@ -30,11 +32,13 @@ def generate_text_response_task(audio_data, subject, personality, intelligence, 
 
     # Save the audio file in base64 format
     with open(output_path, "wb") as audio_file:
+        print("DEBUG: Opening file path")
         audio_file.write(base64.b64decode(audio_data))
 
     #model = whisper.load_model("base")
 
     # Transcribe the audio
+    print("Transcribing...")
     transcription = model.transcribe(output_path)['text']
     print(f"Transcribed test: {transcription}")
     # os.remove(output_path)
@@ -55,6 +59,15 @@ def generate_text_response_task(audio_data, subject, personality, intelligence, 
 @app.task
 def generate_audio_response_task(audio_data, subject, personality, intelligence, interest, happiness):
     # Call the text response task and wait for the result
+
+    print(f"Task received with parameters:\n"
+          f"audio_data: {len(audio_data) if audio_data else 'None'} bytes\n"
+          f"subject: {subject}\n"
+          f"personality: {personality}\n"
+          f"intelligence: {intelligence}\n"
+          f"interest: {interest}\n"
+          f"happiness: {happiness}")
+
     response_task = generate_text_response_task.delay(audio_data, subject, personality, intelligence, interest, happiness)
     response_text = response_task.get()
 

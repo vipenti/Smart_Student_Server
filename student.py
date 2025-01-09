@@ -3,6 +3,7 @@ import random
 import requests
 import re
 
+LLM_URL = "http://your.URL.here"
 
 class Personality(Enum):
     SILENT = 1
@@ -90,8 +91,8 @@ class Student:
         }
 
         # 25.53.69.231
-
-        response = requests.post(url="http://127.0.0.1:1234/v1/chat/completions", json=message)
+        print("Debug: " + LLM_URL)
+        response = requests.post(url=f"{LLM_URL}/v1/chat/completions", json=message)
         response_data = response.json()
 
         content_message = clean_answer(response_data["choices"][0]["message"]["content"])
