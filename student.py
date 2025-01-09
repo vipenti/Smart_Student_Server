@@ -3,6 +3,7 @@ import random
 import requests
 import re
 
+LLM_URL = "http://your.URL.here"
 
 class Personality(Enum):
     SILENT = 1
@@ -28,7 +29,7 @@ class Interest(Enum):
     VERY_INTERESTED = 5
 
 
-class Happyness(Enum):
+class Happiness(Enum):
     SAD = 1
     UNHAPPY = 2
     NEUTRAL = 3
@@ -47,7 +48,7 @@ class Student:
     - Extroverted: {personality} 
     - Intelligence: {intelligence} 
     - Interested in the lecture: {interest} 
-    - Happy: {happyness} 
+    - Happy: {happiness} 
 
     You will listen to the professor's presentation, whose main topic will be: {subject}. You have the task of behaving like a 
     realistic student, more specifically you can: 
@@ -60,12 +61,12 @@ class Student:
     the student's words. Provide only the student's vocal response, absolutely avoiding any description of actions or 
     thoughts, such as "*looks down*", "[laughs]", etc. Spoken words only."""
 
-    def __init__(self, subject, personality, intelligence, interest, happyness):
+    def __init__(self, subject, personality, intelligence, interest, happiness):
         # Assegna i valori passati o genera casualmente
         self.personality = personality if personality is not None else random.choice(list(Personality))
         self.intelligence = intelligence if intelligence is not None else random.choice(list(Intelligence))
         self.interest = interest if interest is not None else random.choice(list(Interest))
-        self.happyness = happyness if happyness is not None else random.choice(list(Happyness))
+        self.happiness = happiness if happiness is not None else random.choice(list(Happiness))
 
         self.subject = subject
         self.starting_prompt = Student.STARTING_PROMPT.format(
@@ -73,7 +74,7 @@ class Student:
             personality=self.personality.name,
             intelligence=self.intelligence.name,
             interest=self.interest.name,
-            happyness=self.happyness.name
+            happiness=self.happiness.name
         )
 
     def generate_response(self, transcription):
@@ -89,7 +90,9 @@ class Student:
             "max_tokens": -1
         }
 
-        response = requests.post(url="http://25.53.69.231:1234/v1/chat/completions", json=message)
+        # 25.53.69.231
+        print("Debug: " + LLM_URL)
+        response = requests.post(url=f"{LLM_URL}/v1/chat/completions", json=message)
         response_data = response.json()
 
         content_message = clean_answer(response_data["choices"][0]["message"]["content"])

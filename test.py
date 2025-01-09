@@ -1,4 +1,4 @@
-from student import Student, Personality, Intelligence, Interest, Happyness
+from student import Student, Personality, Intelligence, Interest, Happiness
 from tasks import generate_audio_response_task
 import os
 import requests
@@ -58,7 +58,7 @@ def api_call():
         personality=Personality.SHY,
         intelligence=Intelligence.LOW,
         interest=Interest.UNINTERESTED,
-        happyness=Happyness.SAD
+        happyness=Happiness.SAD
     )
 
     print(test.generate_response(transcription))
@@ -70,7 +70,7 @@ def celery_test():
     with open(input_file, "rb") as audio_file:
         audio_base64 = base64.b64encode(audio_file.read()).decode("utf-8")
 
-    generate_audio_response_task(audio_base64, "3D Modeling", Personality.SHY, Intelligence.LOW, Interest.UNINTERESTED, Happyness.SAD)
+    generate_audio_response_task(audio_base64, "3D Modeling", Personality.SHY, Intelligence.LOW, Interest.UNINTERESTED, Happiness.SAD)
 
 
 if __name__ == "__main__":
